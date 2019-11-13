@@ -1,34 +1,10 @@
 'use strict';
 
-import * as path from 'path';
 import * as vscode from 'vscode';
 import * as proto from './protocol';
 
 import { workspace, ExtensionContext } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
-import * as vscodeClient from 'vscode-languageclient';
-
-// function createServerProcess(serverModule: string, debugOptions: string[]): ServerOptions {
-//   let nodejsPath = workspace.getConfiguration('nodejs')['path'] || '';
-//   let nodejsCmd = path.join(nodejsPath, 'node');
-
-//   // If the extension is launch in debug mode the debug server options are use
-//   // Otherwise the run options are used
-//   var args = debugOptions.concat([serverModule]);
-//   return {
-//     run: { command: nodejsCmd, args: [serverModule] },
-//     debug: { command: nodejsCmd, args: debugOptions.concat([serverModule]) }
-//   }
-// }
-
-function createServerLocalExtension(serverModule: string, debugOptions: string[]): ServerOptions {
-  const options: { run: vscodeClient.NodeModule; debug: vscodeClient.NodeModule } = {
-    run: { module: serverModule, transport: TransportKind.ipc },
-    debug: { module: serverModule, transport: TransportKind.ipc, options: { execArgv: debugOptions } }
-  }
-  return options;
-}
-
+import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 
 export class CoqLanguageServer implements vscode.Disposable {
   private static instance: CoqLanguageServer;
@@ -38,13 +14,6 @@ export class CoqLanguageServer implements vscode.Disposable {
   private documentCallbacks = new Map<string,DocumentCallbacks>();
 
   private constructor(context: ExtensionContext) {
-    // The server is implemented in node
-    let serverModule = context.asAbsolutePath(path.join('out', 'server', 'src', 'server.js'));
-    // The debug options for the server
-    let debugOptions = ["--nolazy", "--inspect=6007"];
-
-    // let serverOptions = createServerProcess(serverModule, debugOptions);
-    let serverOptions = createServerLocalExtension(serverModule, debugOptions);
 
     // Options to control the language client
     let clientOptions: LanguageClientOptions = {
@@ -59,7 +28,15 @@ export class CoqLanguageServer implements vscode.Disposable {
     }
 
     // Create the language client and start the client.
-    this.server = new LanguageClient('Coq Language Server', serverOptions, clientOptions);
+    this.server = new LanguageClient(
+                  'coqLanguageServer',
+                  'Coq Language Server',
+                  {
+                      command: 'vscoqtop.opt',
+                      args: [ ]
+                  },
+                  clientOptions
+              );
     this.server.onReady()
       .then(() => {
         this.server.onNotification(proto.UpdateHighlightsNotification.type, (p) => {
@@ -106,7 +83,9 @@ export class CoqLanguageServer implements vscode.Disposable {
       }, (reason) =>
         console.log("Coq language server failed to load: " + reason.toString()));
 
+    console.log("starting vscoqtop");
     this.subscriptions.push(this.server.start());
+    console.log("vscoqtop started");
   }
 
   public static create(context: ExtensionContext): CoqLanguageServer {
