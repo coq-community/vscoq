@@ -785,7 +785,10 @@
 	"devDependencies": {
 		"typescript": "^2.2.1",
 		"ts-prune": "^0.2.3",
-		"vsce": "^1.66.0"
+		"vsce": "^1.66.0",
+		"ts-loader": "^6.0.4",
+		"webpack": "^4.36.1",
+		"webpack-cli": "^3.3.6"
 	},
 	"repository": {
 		"type": "git",

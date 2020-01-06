@@ -33,7 +33,8 @@
     "mocha": "^6.1.4"
   },
   "scripts": {
-    "compile": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc -p ./",
+    "vscode:prepublish": "webpack --mode production",
+    "compile": "webpack --mode development",
     "watch": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc --watch -p ./",
     "test": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc -p ./ && mocha -u tdd ../client/server/test",
     "test-debug": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc -p ./ && mocha -u tdd --debug-brk=5858 ../client/server/test"

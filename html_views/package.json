@@ -16,10 +16,7 @@
   },
   "devDependencies": {
     "@types/jquery": "^3.3.30",
-    "shx": "^0.3.2",
-    "ts-loader": "^6.0.4",
-    "webpack": "^4.36.1",
-    "webpack-cli": "^3.3.6"
+    "shx": "^0.3.2"
   },
   "dependencies": {
     "jquery": "^3.4.1"
