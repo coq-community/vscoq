@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig",
+  "compilerOptions": {
+    "composite": true
+  },
+  "files": ["index.ts", "protocol.ts", "coq-proto.ts"],
+  "declaration": true,
+  "declarationMap": true
+}

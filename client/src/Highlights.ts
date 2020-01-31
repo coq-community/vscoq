@@ -1,22 +1,35 @@
-'use strict';
-
-
-import * as vscode from 'vscode';
-import * as proto from './protocol';
-import {decorations} from './Decorations';
+import * as vscode from "vscode";
+import * as proto from "../../lib";
+import { decorations } from "./Decorations";
 // import {RangeSet} from './RangeSet';
 
-import { TextEditor } from 'vscode';
+import { TextEditor } from "vscode";
 
-function toRange(range: {start: {line: number, character: number}, end: {line: number, character: number}}) {
-  return new vscode.Range(range.start.line,range.start.character,range.end.line,range.end.character);
+function toRange(range: {
+  start: { line: number; character: number };
+  end: { line: number; character: number };
+}) {
+  return new vscode.Range(
+    range.start.line,
+    range.start.character,
+    range.end.line,
+    range.end.character
+  );
 }
 
 export class Highlights {
   // private textHighlights : {decoration: vscode.TextEditorDecorationType, ranges: RangeSet}[] = [];
   // private textHighlights : vscode.TextEditorDecorationType[];
-  private current : {ranges: [ vscode.Range[], vscode.Range[], vscode.Range[], vscode.Range[], vscode.Range[], vscode.Range[] ]}
-    = { ranges: [ [], [], [], [], [], [] ] };
+  private current: {
+    ranges: [
+      vscode.Range[],
+      vscode.Range[],
+      vscode.Range[],
+      vscode.Range[],
+      vscode.Range[],
+      vscode.Range[]
+    ];
+  } = { ranges: [[], [], [], [], [], []] };
 
   constructor() {
     // this.textHighlights[proto.HighlightType.Parsing   ] = parsingTextDecoration;
@@ -29,19 +42,21 @@ export class Highlights {
   }
 
   public set(editors: Iterable<TextEditor>, highlights: proto.Highlights) {
-    this.current = { ranges:
-       [ highlights.ranges[0].map(toRange)
-       , highlights.ranges[1].map(toRange)
-       , highlights.ranges[2].map(toRange)
-       , highlights.ranges[3].map(toRange)
-       , highlights.ranges[4].map(toRange)
-       , highlights.ranges[5].map(toRange)
-       ]};
+    this.current = {
+      ranges: [
+        highlights.ranges[0].map(toRange),
+        highlights.ranges[1].map(toRange),
+        highlights.ranges[2].map(toRange),
+        highlights.ranges[3].map(toRange),
+        highlights.ranges[4].map(toRange),
+        highlights.ranges[5].map(toRange)
+      ]
+    };
     this.applyCurrent(editors);
   }
 
   public clearAll(editors: Iterable<TextEditor>) {
-    this.current = { ranges: [ [], [], [], [], [], [] ] };
+    this.current = { ranges: [[], [], [], [], [], []] };
     this.applyCurrent(editors);
   }
 
@@ -50,13 +65,31 @@ export class Highlights {
   }
 
   private applyCurrent(editors: Iterable<TextEditor>) {
-    for(let editor of editors) {
-      editor.setDecorations(decorations.stateError , this.current.ranges[proto.HighlightType.StateError]);
-      editor.setDecorations(decorations.parsing    , this.current.ranges[proto.HighlightType.Parsing]);
-      editor.setDecorations(decorations.processing , this.current.ranges[proto.HighlightType.Processing]);
-      editor.setDecorations(decorations.incomplete , this.current.ranges[proto.HighlightType.Incomplete]);
-      editor.setDecorations(decorations.axiom      , this.current.ranges[proto.HighlightType.Axiom]);
-      editor.setDecorations(decorations.processed  , this.current.ranges[proto.HighlightType.Processed]); 
+    for (let editor of editors) {
+      editor.setDecorations(
+        decorations.stateError,
+        this.current.ranges[proto.HighlightType.StateError]
+      );
+      editor.setDecorations(
+        decorations.parsing,
+        this.current.ranges[proto.HighlightType.Parsing]
+      );
+      editor.setDecorations(
+        decorations.processing,
+        this.current.ranges[proto.HighlightType.Processing]
+      );
+      editor.setDecorations(
+        decorations.incomplete,
+        this.current.ranges[proto.HighlightType.Incomplete]
+      );
+      editor.setDecorations(
+        decorations.axiom,
+        this.current.ranges[proto.HighlightType.Axiom]
+      );
+      editor.setDecorations(
+        decorations.processed,
+        this.current.ranges[proto.HighlightType.Processed]
+      );
     }
   }
 
@@ -78,7 +111,7 @@ export class Highlights {
   //     }
   //   }
   // }
-  
+
   // public refreshHighlights(editors: vscode.TextEditor[]) {
   //   this.textHighlights
   //     .forEach((highlight,idx,a) => {
@@ -121,32 +154,32 @@ export class Highlights {
   //       highlight.ranges.applyEdit(delta);
   //     });
   // }
-// 
-//   // Increases or decreases the number of characters in the highlight ranges starting
-//   // at `position` and adjusts all subsequent ranges
-//   public shiftCharacters(position: number, count: number) : boolean {
-//     if(count == 0)
-//       return;
-//     const beginIdx = this.positionalIndexAt(position);
-//     const beginSent = this.sentencesByPosition[beginIdx];
-//     if(beginSent.textEnd > position) {
-//       // contains the position
-//       if(-count > beginSent.textEnd - beginSent.textBegin)
-//         return false; // cannot remove more characters than a sentence has
-//       beginSent.textEnd += count;
-//     } else if(beginIdx < this.sentencesByPosition.length-1
-//       && -count > this.sentencesByPosition[beginIdx+1].textBegin-beginSent.textEnd) {
-//       return false; // cannot remove more characters than exist between sentences      
-//     }
-//     
-//     // shift subsequent sentences
-//     for (let idx = beginIdx+1; idx < this.sentencesByPosition.length; ++idx) {
-//       this.sentencesByPosition[idx].textBegin+= count;
-//       this.sentencesByPosition[idx].textEnd+= count;
-//     }
-//     
-//     return true;
-//   }
+  //
+  //   // Increases or decreases the number of characters in the highlight ranges starting
+  //   // at `position` and adjusts all subsequent ranges
+  //   public shiftCharacters(position: number, count: number) : boolean {
+  //     if(count == 0)
+  //       return;
+  //     const beginIdx = this.positionalIndexAt(position);
+  //     const beginSent = this.sentencesByPosition[beginIdx];
+  //     if(beginSent.textEnd > position) {
+  //       // contains the position
+  //       if(-count > beginSent.textEnd - beginSent.textBegin)
+  //         return false; // cannot remove more characters than a sentence has
+  //       beginSent.textEnd += count;
+  //     } else if(beginIdx < this.sentencesByPosition.length-1
+  //       && -count > this.sentencesByPosition[beginIdx+1].textBegin-beginSent.textEnd) {
+  //       return false; // cannot remove more characters than exist between sentences
+  //     }
+  //
+  //     // shift subsequent sentences
+  //     for (let idx = beginIdx+1; idx < this.sentencesByPosition.length; ++idx) {
+  //       this.sentencesByPosition[idx].textBegin+= count;
+  //       this.sentencesByPosition[idx].textEnd+= count;
+  //     }
+  //
+  //     return true;
+  //   }
 
   // public toHighlightStrings() {
   //   return this.textHighlights
@@ -160,6 +193,4 @@ export class Highlights {
   // public toString() : string {
   //   return this.toHighlightStrings().toString();
   // }
-
 }
-

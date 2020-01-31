@@ -1,16 +1,15 @@
-'use strict';
 // import * as peg from 'pegjs'
-import * as util from 'util'
-import * as textUtil from './../util/text-util'
-import {Range} from 'vscode-languageserver'
-import * as server from './../server'
-import * as peg from 'pegjs'
-import {ExpectedItem} from 'pegjs';
-export {ExpectedItem} from 'pegjs';
-import * as ast from './ast-types'
-export * from './ast-types'
+import * as util from "util";
+import * as textUtil from "./../util/text-util";
+import { Range } from "vscode-languageserver";
+import * as server from "./../server";
+import * as peg from "pegjs";
+import { ExpectedItem } from "pegjs";
+export { ExpectedItem } from "pegjs";
+import * as ast from "./ast-types";
+export * from "./ast-types";
 
-export const coqGrammar = String.raw `
+export const coqGrammar = String.raw`
 {
   function errorUnclosedBracket(lb, end) {
     error("unterminated bracket '" + lb.text + "'", {start: lb.loc.start, end: end})
@@ -137,13 +136,20 @@ No = [\u00B2-\u00B3\u00B9\u00BC-\u00BE\u09F4-\u09F9\u0B72-\u0B77\u0BF0-\u0BF2\u0
 Pc = [\u005F\u203F-\u2040\u2054\uFE33-\uFE34\uFE4D-\uFE4F\uFF3F]
 // Separator, Space
 Zs = [\u0020\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]
-`
+`;
 
-const sentenceParser = peg.generate(coqGrammar,{output: "parser", allowedStartRules: ["SentenceLength", "TrySentence"]});
-
+const sentenceParser = peg.generate(coqGrammar, {
+  output: "parser",
+  allowedStartRules: ["SentenceLength", "TrySentence"]
+});
 
 export function locationRangeToRange(loc: peg.LocationRange) {
-  return Range.create(loc.start.line-1,loc.start.column-1,loc.end.line-1,loc.end.column-1);
+  return Range.create(
+    loc.start.line - 1,
+    loc.start.column - 1,
+    loc.end.line - 1,
+    loc.end.column - 1
+  );
 }
 
 export class SyntaxError extends Error {
@@ -155,32 +161,55 @@ export class SyntaxError extends Error {
     public readonly endOffset: number,
     public readonly found?: any,
     public readonly expected?: ExpectedItem[],
-    public readonly stack?: any)
-    { super(message); }
+    public readonly stack?: any
+  ) {
+    super(message);
+  }
 
   public static fromPegjsError(error: peg.PegjsError) {
     const loc = error.location;
-    if(!loc)
+    if (!loc)
       server.connection.console.log(util.inspect(error, false, undefined));
     const range = locationRangeToRange(loc);
 
-    let result = new SyntaxError(error.name, error.message, range, loc.start.offset, loc.end.offset, error.found, error.expected, error.stack);
+    let result = new SyntaxError(
+      error.name,
+      error.message,
+      range,
+      loc.start.offset,
+      loc.end.offset,
+      error.found,
+      error.expected,
+      error.stack
+    );
     return result;
   }
 
   public static unknown(parseStr: string) {
-    const range = Range.create(textUtil.positionAt(parseStr, 0), textUtil.positionAt(parseStr, parseStr.length));
-    let result = new SyntaxError("unknown", "Unexpected parse error", range, 0, parseStr.length);
+    const range = Range.create(
+      textUtil.positionAt(parseStr, 0),
+      textUtil.positionAt(parseStr, parseStr.length)
+    );
+    let result = new SyntaxError(
+      "unknown",
+      "Unexpected parse error",
+      range,
+      0,
+      parseStr.length
+    );
     return result;
   }
 }
 
-export function parseSentenceLength(str: string) : number {
+export function parseSentenceLength(str: string): number {
   try {
-    sentenceParser.parse(str, {startRule: "SentenceLength", tracer: undefined}) as string;
+    sentenceParser.parse(str, {
+      startRule: "SentenceLength",
+      tracer: undefined
+    }) as string;
     return -1;
-  } catch(error) {
-    if(typeof error === 'number') {
+  } catch (error) {
+    if (typeof error === "number") {
       return error;
     } else {
       return -1;
@@ -188,34 +217,16 @@ export function parseSentenceLength(str: string) : number {
   }
 }
 
-export function parseSentence(str: string) : ast.Sentence {
+export function parseSentence(str: string): ast.Sentence {
   try {
-    return sentenceParser.parse(str, {startRule: "TrySentence", tracer: undefined}) as ast.Sentence;
-  } catch(error) {
+    return sentenceParser.parse(str, {
+      startRule: "TrySentence",
+      tracer: undefined
+    }) as ast.Sentence;
+  } catch (error) {
     throw SyntaxError.fromPegjsError(error);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // const skipSentenceRE = /^(?:[^.("]|[.][^\s(]|[.][^\s]\([^*]|\([^*])*([.]|\(\*|")/;
 // const skipSentenceRE = /^(?:[^.("]|[.][^\s]|\([^*])*([.]|\(\*|")/;
@@ -239,10 +250,9 @@ interface SentenceSkip {
   isPreWhitespace?: boolean;
 }
 
-function doSimpleSkip(str:string, idx:number, re: RegExp) : SentenceSkip {
+function doSimpleSkip(str: string, idx: number, re: RegExp): SentenceSkip {
   const match = re.exec(str.substr(idx));
-  if(!match || match.length===0)
-    throw 'anomaly: bad regex';
+  if (!match || match.length === 0) throw "anomaly: bad regex";
   // update our position to after the matched text
   return {
     skip: match[0].length,
@@ -266,30 +276,29 @@ function doSimpleSkip(str:string, idx:number, re: RegExp) : SentenceSkip {
 //     return doSimpleSkip(str,idx,skipSentenceRE);
 // }
 
-function doSkipComment(str:string, idx:number) : SentenceSkip {
-  return doSimpleSkip(str,idx,skipCommentRE);
+function doSkipComment(str: string, idx: number): SentenceSkip {
+  return doSimpleSkip(str, idx, skipCommentRE);
 }
 
 // function doSkipString(str:string, idx:number) : SentenceSkip {
 //   return doSimpleSkip(str,idx,skipStringRE);
 // }
 
-
 /**
  * @returns the length of the parsed command or -1 if there is no [full] command
- * 
+ *
  * S::= BULLET  |  COMMENT S  |  P .
  * P::= ( P )  |  [ P ]  |  " P "  | TEXT P
- * COMMENT::= (* CSTUFF *) 
+ * COMMENT::= (* CSTUFF *)
  * CSTUFF::= TEXT (* CSTUFF *) |
- * 
+ *
  */
 // export function parseSentence(str: string) : number {
 //   // Assume we are starting outside of a comment or parentheses
 //   // match everything up to a period or beginning of a comment or string
 //   let idx = 0;
 //   let allowBullet = true; // whether a bullet may be expected (becomes false after the first non-whitespace)
-  
+
 //   while(true) {
 //     const skipSen = doSkipSentence(str,idx,allowBullet);
 //     idx+= skipSen.skip;
@@ -300,13 +309,12 @@ function doSkipComment(str:string, idx:number) : SentenceSkip {
 //       allowBullet = false; // Some non-whitespace has appeared so we are no longer looking for bullets
 //     else if(!allowBullet && skipSen.bullet!=undefined)
 //       continue; // saw a bullet, but we are only looking for periods -- move on
-    
-      
+
 //     if(skipSen.terminator === '.')
 //       break; // we found the end of the sentence
 //     else if (skipSen.terminator === '(') {
 //     } else if (skipSen.terminator === '[') {
-      
+
 //     } else if(skipSen.terminator === '(*') {
 //       // skip through [nested] comments
 //       let nesting = 1;
@@ -344,7 +352,7 @@ function doSkipComment(str:string, idx:number) : SentenceSkip {
 //   else if (/^\s+$/.test(changedText) && /^\s+$/.test(changedText))
 //     return true; // whitespace --> whitespace
 //   else
-//     return false;  
+//     return false;
 // }
 
 // /**
@@ -357,12 +365,12 @@ function doSkipComment(str:string, idx:number) : SentenceSkip {
 //  */
 // function isPassiveEdit(documentText: string, beginOffset: number, endOffset: number, changeText: string) : boolean {
 //   let idx = 0;
-//   
-//   
+//
+//
 //   while(true) {
 //     const skipSen = doSkipSentence(documentText, idx, false);
 //     idx+= skipSen.skip;
-// 
+//
 //     if(endOffset <= idx - skipSen.terminator.length || skipSen.terminator === '.') {
 //       // the change is affecting a command
 //       // only allow whitespace edits
@@ -398,67 +406,65 @@ function doSkipComment(str:string, idx:number) : SentenceSkip {
 //   return false;
 // }
 
-function removeComments(str: string) : string {
+function removeComments(str: string): string {
   // Assume we are starting outside of a comment or parentheses
   // match everything up to a period or beginning of a comment or string
-  let result = ''; // accumulates normalized text
+  let result = ""; // accumulates normalized text
   let idx = 0;
-  
-  while(idx < str.length) {
-     // find next comment deliminator
+
+  while (idx < str.length) {
+    // find next comment deliminator
     const senMatch = /^((?:[^(]|\((?!\*))*)(\(\*)?/.exec(str.substring(idx));
-    idx+= senMatch[0].length;
-    result+= senMatch[1]; // accumulate everything but the comment
-    
-    if(senMatch[2] === '(*') {
+    idx += senMatch[0].length;
+    result += senMatch[1]; // accumulate everything but the comment
+
+    if (senMatch[2] === "(*") {
       // skip through [nested] comments
       // do NOT accumulate result
-      result+= ' ';
+      result += " ";
       let nesting = 1;
-      while(nesting > 0) {
-        const skipCom = doSkipComment(str,idx);
-        idx+= skipCom.skip;
-        if(skipCom.terminator === '*)')
-          --nesting; // leaving a comment
-        else if(skipCom.terminator === '(*')
-          ++nesting; // need to recurse
-        else
-          throw "bad comment nesting";
+      while (nesting > 0) {
+        const skipCom = doSkipComment(str, idx);
+        idx += skipCom.skip;
+        if (skipCom.terminator === "*)") --nesting;
+        // leaving a comment
+        else if (skipCom.terminator === "(*") ++nesting;
+        // need to recurse
+        else throw "bad comment nesting";
       }
     }
   }
   return result;
 }
 
-function removeExcessWhitespace(str: string) : string {
+function removeExcessWhitespace(str: string): string {
   // Assume we are starting outside of a comment or parentheses
   // match everything up to a period or beginning of a comment or string
-  let result = ''; // accumulates normalized text
+  let result = ""; // accumulates normalized text
   let idx = 0;
-  
-  while(idx < str.length) {
-    const wsMatch = /^\s*/.exec(str.substring(idx));
-    idx+= wsMatch[0].length;
-    if(wsMatch[0].length > 0)
-      result+= ' '; // keep one whitespace character
 
-     // skip over non whitespace; but end at any beginning string deliminator
+  while (idx < str.length) {
+    const wsMatch = /^\s*/.exec(str.substring(idx));
+    idx += wsMatch[0].length;
+    if (wsMatch[0].length > 0) result += " "; // keep one whitespace character
+
+    // skip over non whitespace; but end at any beginning string deliminator
     const senMatch = /^((?:[^\s"])*)(")?/.exec(str.substring(idx));
-    idx+= senMatch[0].length;
-    result+= senMatch[1];
-    
-    if(senMatch[2] === '"') {
-      result+= '"';
+    idx += senMatch[0].length;
+    result += senMatch[1];
+
+    if (senMatch[2] === '"') {
+      result += '"';
       // skip through string literal
       const matchStr = skipStringRE.exec(str.substring(idx));
-      idx+= matchStr[0].length;
-      result+= matchStr[0];
+      idx += matchStr[0].length;
+      result += matchStr[0];
     }
   }
   return result;
 }
 
-export function normalizeText(str: string) : string {
+export function normalizeText(str: string): string {
   // Assume we are starting outside of a comment or parentheses
   return removeExcessWhitespace(removeComments(str));
 }
@@ -477,7 +483,7 @@ export function normalizeText(str: string) : string {
 //   // 2. normalize original & edited text
 //   //   a) remove extra whitespace
 //   //   b) remove comments
-//   // 3. return true iff both normalized texts are still equal 
+//   // 3. return true iff both normalized texts are still equal
 //   try {
 //     const editedDocumentText = documentText.substring(0,beginOffset) + changeText + documentText.substring(endOffset);
 //     return normalizeText(documentText) === normalizeText(editedDocumentText);
@@ -487,21 +493,20 @@ export function normalizeText(str: string) : string {
 // }
 
 /**
- * Determines whether the two commands are equivalent modulo whitespace and comments 
+ * Determines whether the two commands are equivalent modulo whitespace and comments
  * @returns `false` if the edit might change the validity of the sentence and thus needs to be reinterpreted
  */
-export function isPassiveDifference(cmd1: string, cmd2: string) : boolean {
+export function isPassiveDifference(cmd1: string, cmd2: string): boolean {
   try {
     // normalize: remove comments and collapse whitespace
-    // special: it's okay for whitespace to be introduced or removed around closing period and at the beginning of a sentence 
-    const normalized1 = normalizeText(' ' + cmd1.replace(/[.]\s*$/, ' . '));
-    const normalized2 = normalizeText(' ' + cmd2.replace(/[.]\s*$/, ' . '));
+    // special: it's okay for whitespace to be introduced or removed around closing period and at the beginning of a sentence
+    const normalized1 = normalizeText(" " + cmd1.replace(/[.]\s*$/, " . "));
+    const normalized2 = normalizeText(" " + cmd2.replace(/[.]\s*$/, " . "));
     return normalized1 === normalized2;
-  } catch(err) {
+  } catch (err) {
     return false;
   }
 }
-
 
 export enum SentenceRangeContainment {
   /** The range is contained by the sentence (range may be empty at the beginning, but not at the end and empty). Adjust sentence; check for invalidation */
@@ -511,29 +516,31 @@ export enum SentenceRangeContainment {
   /** The range is after the sentence. Ignore change. */
   After,
   /** The change crosses the sentence boundary. Invalidate sentence. */
-  Crosses,
+  Crosses
 }
 /** Determines whether a Coq sentence range should contain the range
  * A sentence contains a range if the range is nonempty and is completely within the sentence
  * OR if it is empty and at the *beginning* of a sentence.
  * (We only check the beginning because we assume sentences always end with a period (no more whitespace))
-*/
-export function sentenceRangeContainment(sentRange: Range, range: Range) : SentenceRangeContainment {
-  if(textUtil.positionIsAfter(sentRange.start,range.end))
-    return SentenceRangeContainment.Before; // change is strictly before sentence
-  else if(textUtil.positionIsBeforeOrEqual(sentRange.end,range.start))
-    return SentenceRangeContainment.After; // change is after sentence
-  else if(textUtil.positionIsBeforeOrEqual(sentRange.start, range.start) && textUtil.positionIsAfterOrEqual(sentRange.end, range.end))
-    return SentenceRangeContainment.Contains; // change is inside the sentence
-  else if(textUtil.positionIsAfterOrEqual(sentRange.start,range.end))
-    return SentenceRangeContainment.Before; // change is before sentence (maybe touching) and nonempty
-  else
-    return SentenceRangeContainment.Crosses;
-    
+ */
+export function sentenceRangeContainment(
+  sentRange: Range,
+  range: Range
+): SentenceRangeContainment {
+  if (textUtil.positionIsAfter(sentRange.start, range.end))
+    return SentenceRangeContainment.Before;
+  // change is strictly before sentence
+  else if (textUtil.positionIsBeforeOrEqual(sentRange.end, range.start))
+    return SentenceRangeContainment.After;
+  // change is after sentence
+  else if (
+    textUtil.positionIsBeforeOrEqual(sentRange.start, range.start) &&
+    textUtil.positionIsAfterOrEqual(sentRange.end, range.end)
+  )
+    return SentenceRangeContainment.Contains;
+  // change is inside the sentence
+  else if (textUtil.positionIsAfterOrEqual(sentRange.start, range.end))
+    return SentenceRangeContainment.Before;
+  // change is before sentence (maybe touching) and nonempty
+  else return SentenceRangeContainment.Crosses;
 }
-
-
-
-
-
-
