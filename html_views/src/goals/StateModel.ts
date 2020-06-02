@@ -92,15 +92,25 @@ function onDoubleClickBreakableText(event: JQueryMouseEventObject) {
 
 
 function createHypothesis(hyp: Hypothesis) : JQuery {
-  return $('<li>')
+  var r = $('<li>')
     .addClass('hypothesis')
     .addClass('breakText')
     .addClass(getDifferenceClass(hyp.diff))
-    .append(
-      [ $('<span>').addClass('ident').text(hyp.identifier)
-      , $('<span>').addClass('rel').text(hyp.relation)
+    .append($('<span>').addClass('ident').text(hyp.identifiers.join(',')));
+  
+  if (hyp.body) {
+    r.append(
+      [ $('<span>').addClass('rel').text(':=')
       , $('<span>').addClass('expr')
-        .append($(createAnnotatedText(hyp.expression)))
+        .append($(createAnnotatedText(hyp.body)))
+      ]
+    )
+  }
+
+  return r.append(
+      [ $('<span>').addClass('rel').text(':')
+      , $('<span>').addClass('expr')
+        .append($(createAnnotatedText(hyp.type)))
       ])
     .on('dblclick', onDoubleClickBreakableText)
 
