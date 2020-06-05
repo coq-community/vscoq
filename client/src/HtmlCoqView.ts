@@ -58,7 +58,7 @@ export class HtmlCoqView implements view.CoqView {
   private coqViewUri : vscode.Uri;
   private currentSettings : SettingsState = {};
   private visible = false;
-  private initialState : undefined | proto.CommandResult;
+  private currentState : undefined | proto.CommandResult;
 
   private panel : vscode.WebviewPanel | null = null;
 
@@ -90,9 +90,9 @@ export class HtmlCoqView implements view.CoqView {
       case 'focus':
         docs.getProject().setActiveDoc(this.docUri);
         return;
-      case 'getInitialGoal':
-        if (this.initialState)
-          this.update(this.initialState);
+      case 'getGoal':
+        if (this.currentState)
+          this.update(this.currentState);
         return;
     }
   }
@@ -148,7 +148,7 @@ export class HtmlCoqView implements view.CoqView {
     if(!this.coqViewUri)
       await this.createBuffer();
 
-    this.initialState = state;
+    this.currentState = state;
     this.initializePanel(pane);
 
     this.visible = true;
@@ -165,6 +165,7 @@ export class HtmlCoqView implements view.CoqView {
   }
 
   private async updateClient(state: proto.CommandResult) {
+    this.currentState = state;
     await this.sendMessage({command: 'goal-update', goal: state});
   }
 
