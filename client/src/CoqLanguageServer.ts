@@ -2,6 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as proto from './protocol';
+import * as cp from 'child_process';
 
 import { workspace, ExtensionContext } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
@@ -10,6 +11,7 @@ export class CoqLanguageServer implements vscode.Disposable {
   private static instance: CoqLanguageServer;
   private subscriptions: vscode.Disposable[] = [];
   private server: LanguageClient;
+  private serverProcess: cp.ChildProcessWithoutNullStreams;
   private cancelRequest = new vscode.CancellationTokenSource();
   private documentCallbacks = new Map<string,DocumentCallbacks>();
 
@@ -27,14 +29,21 @@ export class CoqLanguageServer implements vscode.Disposable {
       }
     }
 
+    let launchServer = async () => {
+      let command = 'vscoqtop.opt';
+      let serverProcess = cp.spawn(command, [], {});
+      if (!serverProcess || !serverProcess.pid) {
+          return Promise.reject(`Launching server using command ${command} failed.`);
+      }
+      this.serverProcess = serverProcess;
+      return Promise.resolve(serverProcess);
+    }
+
     // Create the language client and start the client.
     this.server = new LanguageClient(
                   'coqLanguageServer',
                   'Coq Language Server',
-                  {
-                      command: 'vscoqtop.opt',
-                      args: [ ]
-                  },
+                  launchServer,
                   clientOptions
               );
     this.server.onReady()
@@ -147,10 +156,7 @@ export class CoqLanguageServer implements vscode.Disposable {
   // }
 
   public async interruptCoq(uri: string) {
-    await this.server.onReady();
-    this.cancelRequest.dispose();
-    this.cancelRequest = new vscode.CancellationTokenSource();
-    await this.server.sendRequest(proto.InterruptCoqRequest.type, { uri: uri }, this.cancelRequest.token);
+   this.serverProcess.kill("SIGINT");
   }
 
   public async quitCoq(uri: string) {
