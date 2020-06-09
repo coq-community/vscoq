@@ -443,7 +443,9 @@ export class CoqDocument implements vscode.Disposable {
     try {
       if(!editor || editor.document.uri.toString() !== this.documentUri)
        return;
-      const value = await this.langServer.interpretToPoint(editor.selection.active, synchronous);
+      const task = this.langServer.interpretToPoint(editor.selection.active, synchronous);
+      const progressOptions = { location: vscode.ProgressLocation.Window, title: "Interpreting to point", cancellable: true };
+      const value = await vscode.window.withProgress(progressOptions, (progress,token) => { token.onCancellationRequested((e) => this.langServer.interruptCoq()); return task });
       this.updateView(value, true);
       this.handleResult(value);
     } catch (err) {

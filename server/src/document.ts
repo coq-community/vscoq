@@ -138,68 +138,31 @@ export class CoqDocument implements TextDocument {
     return this.document.positionAt(offset);
   }
 
-
-  // private sentenceStatusToHighlightType(status: coqProto.SentenceStatus) : thmProto.HighlightType {
-  //   switch(status) {
-  //     case coqProto.SentenceStatus.Complete:
-  //       return thmProto.HighlightType.Complete;
-  //     case coqProto.SentenceStatus.Incomplete:
-  //       return thmProto.HighlightType.Incomplete;
-  //     case coqProto.SentenceStatus.InProgress:
-  //       return thmProto.HighlightType.InProgress;
-  //     case coqProto.SentenceStatus.Parsed:
-  //       return thmProto.HighlightType.Parsing;
-  //     case coqProto.SentenceStatus.Processed:
-  //       return thmProto.HighlightType.Processed;
-  //     case coqProto.SentenceStatus.ProcessingInput:
-  //       return thmProto.HighlightType.Processing;
-  //   }
-  // }
-
-  // private highlightTypeToSentenceStatus(type: thmProto.HighlightType) : coqProto.SentenceStatus {
-  //   switch(type) {
-  //     case thmProto.HighlightType.Complete:
-  //       return coqProto.SentenceStatus.Complete;
-  //     case thmProto.HighlightType.Incomplete:
-  //       return coqProto.SentenceStatus.Incomplete;
-  //     case thmProto.HighlightType.InProgress:
-  //       return coqProto.SentenceStatus.InProgress;
-  //     case thmProto.HighlightType.Parsing:
-  //       return coqProto.SentenceStatus.Parsed;
-  //     case thmProto.HighlightType.Processed:
-  //       return coqProto.SentenceStatus.Processed;
-  //     case thmProto.HighlightType.Processing:
-  //       return coqProto.SentenceStatus.ProcessingInput;
-  //     default:
-  //       throw `Cannot convert ${thmProto.HighlightType[type]} to a SentenceStatus`
-  //   }
-  // }
-
-  // private highlightSentence(sentence: Range, type: thmProto.HighlightType) : thmProto.Highlight {
-  //   // if(type===undefined)
-  //   //     type = this.sentenceStatusToHighlightType(sentence.status);
-  //   return { style: type, range: sentence };
-  // }
-
-  private sentenceToHighlightType(status: StateStatus) : thmProto.HighlightType {
+  private sentenceToHighlightRange(status: StateStatus, highlights) : Range[] {
     switch(status) {
-      case StateStatus.Axiom:           return thmProto.HighlightType.Axiom;
-      case StateStatus.Error:           return thmProto.HighlightType.StateError;
-      case StateStatus.Parsing:         return thmProto.HighlightType.Parsing;
-      case StateStatus.Processing:      return thmProto.HighlightType.Processing;
-      case StateStatus.Incomplete:      return thmProto.HighlightType.Incomplete;
-      case StateStatus.Processed:       return thmProto.HighlightType.Processed;
+      case StateStatus.Axiom:           return highlights.axiomRange;
+      case StateStatus.Error:           return highlights.errorRange;
+      case StateStatus.Parsing:         return highlights.parsingRange;
+      case StateStatus.Processing:      return highlights.processingRange;
+      case StateStatus.Incomplete:      return highlights.incompleteRange;
+      case StateStatus.Processed:       return highlights.processedRange;
     }
   }
 
   /** creates the current highlights from scratch */
   private createHighlights() : thmProto.Highlights {
     const highlights : thmProto.Highlights =
-      { ranges: [ [], [], [], [], [], [] ] };
+      { axiomRange: [],
+        stateErrorRange: [],
+        parsingRange: [],
+        processingRange: [],
+        incompleteRange: [],
+        processedRange: []
+      };
     if(!this.isStmRunning())
       return highlights;
     for(let sent of this.stm.getSentences()) {
-      const ranges = highlights.ranges[this.sentenceToHighlightType(sent.status)];
+      const ranges = this.sentenceToHighlightRange(sent.status, highlights);
       if(ranges.length > 0 && textUtil.positionIsEqual(ranges[ranges.length-1].end, sent.range.start))
         ranges[ranges.length-1].end = sent.range.end;
       else {
@@ -220,7 +183,7 @@ export class CoqDocument implements TextDocument {
   private updateHighlights(now = false) {
     this.feedback.updateHighlights(() => {
       const highlights = this.createHighlights();
-      const parsingRanges = highlights.ranges[thmProto.HighlightType.Parsing];
+      const parsingRanges = highlights.parsingRange;
       Array.prototype.push.apply(parsingRanges, this.parsingRanges);
       return highlights;
     }, now);

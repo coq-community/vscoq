@@ -132,9 +132,9 @@ export type AnnotatedText = string | TextAnnotation | ScopedText | (string | Tex
 
 export enum HypothesisDifference { None, Changed, New, MovedUp, MovedDown }
 export interface Hypothesis {
-  identifier: string;
-  relation: string;
-  expression: AnnotatedText;
+  identifiers: string[];
+  type: AnnotatedText;
+  body: AnnotatedText;
   diff: HypothesisDifference;
 }
 export interface Goal {
@@ -273,21 +273,17 @@ export namespace GetSentencePrefixTextRequest {
   export const type = new RequestType<DocumentPositionParams, string, void, void>('coqtop/getSentencePrefixText')
 }
 
-export enum HighlightType {
-  StateError=0, Parsing=1, Processing=2, Incomplete=3, Processed=4, Axiom=5
-}
-
-// export interface Highlight {
-//   style: HighlightType;
-//   range: vscode.Range;
-// }
-
 export interface NotificationParams {
   uri: string;
 }
 
 export interface Highlights {
-  ranges: [vscode.Range[],vscode.Range[],vscode.Range[],vscode.Range[],vscode.Range[],vscode.Range[]];
+  stateErrorRange: vscode.Range[];
+  parsingRange: vscode.Range[];
+  processingRange: vscode.Range[];
+  incompleteRange: vscode.Range[];
+  axiomRange: vscode.Range[];
+  processedRange: vscode.Range[];
 }
 
 export type NotifyHighlightParams = NotificationParams & Highlights;
