@@ -41,14 +41,14 @@
         "extensions": [
           ".v"
         ],
-        "configuration": "./client/coq.configuration.json"
+        "configuration": "./coq.configuration.json"
       }
     ],
     "grammars": [
       {
         "language": "coq",
         "scopeName": "source.coq",
-        "path": "./client/syntaxes/coq.tmLanguage"
+        "path": "./syntaxes/coq.tmLanguage"
       }
     ],
     "configuration": {
@@ -544,7 +544,7 @@
     "snippets": [
       {
         "language": "coq",
-        "path": "./client/snippets/coq.json"
+        "path": "./snippets/coq.json"
       }
     ],
     "colors": [
