@@ -28,8 +28,8 @@ namespace DisplayOptionPicks {
   { label: "Implicit Arguments", description: "toggle display of *implicit arguments*", detail: "some detail", displayItem: proto.DisplayOption.ImplicitArguments };
   export const Coercions : T =
   { label: "Coercions", description: "toggle display of *coercions*", displayItem: proto.DisplayOption.Coercions };
-  export const RawMatchingExpressions : T =
-  { label: "Raw Matching Expressions", description: "toggle display of *raw matching expressions*", displayItem: proto.DisplayOption.RawMatchingExpressions };
+  export const NestedMatchingExpressions : T =
+  { label: "Nested Matching Expressions", description: "toggle display of *nested matching expressions*", displayItem: proto.DisplayOption.NestedMatchingExpressions };
   export const Notations : T =
   { label: "Notations", description: "toggle display of notations", displayItem: proto.DisplayOption.Notations };
   export const AllBasicLowLevelContents : T =
@@ -40,7 +40,7 @@ namespace DisplayOptionPicks {
   { label: "Universe Levels", description: "toggle display of ", displayItem: proto.DisplayOption.UniverseLevels };
   export const AllLowLevelContents : T =
   { label: "All Low Level Contents", description: "toggle display of ", displayItem: proto.DisplayOption.AllLowLevelContents };
-  export const allPicks = [ImplicitArguments, Coercions, RawMatchingExpressions, Notations, AllBasicLowLevelContents, ExistentialVariableInstances, UniverseLevels, AllLowLevelContents];
+  export const allPicks = [ImplicitArguments, Coercions, NestedMatchingExpressions, Notations, AllBasicLowLevelContents, ExistentialVariableInstances, UniverseLevels, AllLowLevelContents];
 }
 
 export class CoqDocument implements vscode.Disposable {

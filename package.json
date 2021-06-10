@@ -309,8 +309,8 @@
         "category": "Coq"
       },
       {
-        "command": "extension.coq.display.toggle.rawMatchingExpressions",
-        "title": "Display Raw Matching Expressions",
+        "command": "extension.coq.display.toggle.nestedMatchingExpressions",
+        "title": "Display Nested Matching Expressions",
         "category": "Coq"
       },
       {

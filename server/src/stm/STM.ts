@@ -120,7 +120,7 @@ export class CoqStateMachine {
   /** The current state of coq options */
   private currentCoqOptions : coqtop.CoqOptions = {
     printingCoercions: false,
-    printingMatching: false,
+    printingMatching: true,
     printingNotations: true,
     printingExistentialInstances: false,
     printingImplicit: false,
@@ -616,7 +616,7 @@ private routeId = 1;
         case proto.DisplayOption.Notations:
           this.currentCoqOptions.printingNotations = set(this.currentCoqOptions.printingNotations, option.value);
           break;
-        case proto.DisplayOption.RawMatchingExpressions:
+        case proto.DisplayOption.NestedMatchingExpressions:
           this.currentCoqOptions.printingMatching = set(this.currentCoqOptions.printingMatching, option.value);
           break;
         case proto.DisplayOption.UniverseLevels:

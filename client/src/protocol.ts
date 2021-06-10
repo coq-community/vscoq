@@ -90,7 +90,7 @@ export enum SetDisplayOption {
 export enum DisplayOption {
   ImplicitArguments,
   Coercions,
-  RawMatchingExpressions,
+  NestedMatchingExpressions,
   Notations,
   AllBasicLowLevelContents,
   ExistentialVariableInstances,
