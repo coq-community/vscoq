@@ -848,7 +848,7 @@
     "vscode-jsonrpc": "^4.0.0",
     "vscode-languageclient": "^5.2.1",
     "vscode-languageserver": "^5.2.1",
-    "ws": "^7.2.1",
+    "ws": "^7.4.6",
     "xml2js": "^0.4.23"
   }
 }
