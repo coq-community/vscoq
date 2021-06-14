@@ -191,7 +191,7 @@
 
         <dict>
             <key>match</key>
-            <string>\b(try|repeat|progress|set|fresh|solve|now|first)\b</string>
+            <string>\b(try|repeat|rew|progress|fresh|solve|now|first)\b</string>
             <key>comment</key>
             <string>Ltac keywords</string>
             <key>name</key>
@@ -218,7 +218,7 @@
 
         <dict>
             <key>match</key>
-            <string>\b(intro|intros|induction|destruct|auto|eauto|eassumption|apply|eapply|assumption|constructor|econstructor|reflexivity|inversion|injection|assert|split|omega|fold|unfold|specialize|rewrite|erewrite|change|symmetry|refine|simpl|intuition|firstorder|generalize|idtac|exist|exists|eexists|elim|eelim|rename|subst|congruence|trivial|left|right|pose|discriminate|clear|clearbody|contradict|contradiction|exact|dependent|remember|case|easy|unshelve)\b</string>
+            <string>\b(intro|intros|induction|destruct|auto|eauto|eassumption|apply|eapply|assumption|constructor|econstructor|reflexivity|inversion|injection|assert|split|omega|fold|unfold|specialize|rewrite|erewrite|change|symmetry|refine|simpl|intuition|firstorder|generalize|idtac|exist|exists|eexists|elim|eelim|rename|subst|congruence|trivial|left|right|set|pose|discriminate|clear|clearbody|contradict|contradiction|exact|dependent|remember|case|easy|unshelve)\b</string>
             <key>comment</key>
             <string>Ltac builtins</string>
             <key>name</key>
