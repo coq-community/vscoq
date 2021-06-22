@@ -190,11 +190,16 @@ export class StateModel {
             ])
             var elmnt = document.getElementById("firstGoal");
             elmnt.scrollIntoView({block: "center", inline: "nearest"}); 
-          } else {
+          } else if (state.backgroundGoals.before.length > 0 || state.backgroundGoals.after.length > 0 ||  state.backgroundGoals.next != undefined ) {
             this.setMessage("There are unfocused goals.");
-          }
+          } else if (state.shelvedGoals.length > 0 ) {
+            this.setMessage("There are shelved goals. Try using `Unshelve`.");
+          } else if (state.abandonedGoals.length > 0 ) {
+            this.setMessage("There are some goals you gave up. You need to go back and solve them, or use `Admitted.`.")
+          } else
+          this.setMessage("No more subgoals. Internal invariant violated. Please report.")
         }
-
+        
       if(hasSubstitutions)
         $('#togglePrettifySymbols').removeClass("hidden")
       else
