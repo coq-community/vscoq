@@ -176,33 +176,17 @@ export class CoqDocument implements vscode.Disposable {
   // }
 
   private onCoqMessage(params: proto.NotifyMessageParams) {
-    if (params.routeId == this.queryRouteId) {
-      this.project.queryOut.show(true);
-      this.project.queryOut.appendLine(psm.prettyTextToString(params.message));
-    } else if (params.routeId == this.hoverQueryRouteId) {
+    /* 
+      originally, all messages will be output to their corresponding channels
+      now with the message panel, they will be output on the message panel, 
+        EXCEPT those which should be displayed as hovering text
+    */
+    if (params.routeId == this.hoverQueryRouteId) {
       const hoverText = psm.prettyTextToString(params.message);
       if (this.hoverListener)
         this.hoverListener(hoverText);
-    }
-    else {
-      switch (params.level) {
-        case 'warning':
-          this.project.infoOut.show(true);
-          this.project.infoOut.appendLine(psm.prettyTextToString(params.message));
-          return;
-        case 'info':
-          this.project.infoOut.appendLine(psm.prettyTextToString(params.message));
-          return;
-        case 'notice':
-          this.project.noticeOut.show(true);
-          this.project.noticeOut.append(psm.prettyTextToString(params.message));
-          this.project.noticeOut.append("\n");
-          return;
-        case 'debug':
-          this.project.debugOut.show(true);
-          this.project.debugOut.appendLine(psm.prettyTextToString(params.message));
-          return;
-      }
+    } else {
+      this.view.update({ innertext: params.message, type: "message-query" });
     }
   }
 
@@ -366,7 +350,7 @@ export class CoqDocument implements vscode.Disposable {
       }
     } else if(value.type === 'interrupted')
       this.statusBar.setStateComputing(proto.ComputingStatus.Interrupted)
-    else
+    else if (value.type !== 'message-query' && value.type !== 'message-ready-clear')
       this.updateFocus(value.focus, this.project.settings.moveCursorToFocus);
 
     return true;
@@ -423,6 +407,7 @@ export class CoqDocument implements vscode.Disposable {
     try {
       this.makePreviewOpenedFilePermanent(editor);
       this.rememberCursors();
+      this.view.update({ type:"message-ready-clear" });
       const value = await this.langServer.stepForward();
       this.updateView(value, true);
       this.handleResult(value);
@@ -449,6 +434,7 @@ export class CoqDocument implements vscode.Disposable {
   public async finishComputations(editor: TextEditor) {
     this.statusBar.setStateWorking('Finishing computations');
     try {
+      this.view.update({ type:"message-ready-clear" });
       await this.langServer.finishComputations();
       this.statusBar.setStateReady();
     } catch (err) {
@@ -461,6 +447,7 @@ export class CoqDocument implements vscode.Disposable {
       if(!editor || editor.document.uri.toString() !== this.documentUri)
        return;
       this.makePreviewOpenedFilePermanent(editor);
+      this.view.update({ type:"message-ready-clear" });
       const value = await this.langServer.interpretToPoint(editor.selection.active, synchronous);
       this.updateView(value, true);
       this.handleResult(value);
@@ -476,6 +463,7 @@ export class CoqDocument implements vscode.Disposable {
     this.statusBar.setStateWorking('Interpreting to end');
     try {
       this.makePreviewOpenedFilePermanent(editor);
+      this.view.update({ type:"message-ready-clear" });
       const value = await this.langServer.interpretToEnd(synchronous);
       this.updateView(value, true);
       this.handleResult(value);
@@ -486,8 +474,9 @@ export class CoqDocument implements vscode.Disposable {
   public async query(query: proto.QueryFunction, term: string | undefined) {
     try {
       if (term) {
-        this.project.queryOut.clear();
-        this.project.queryOut.show(true);
+        // this.project.queryOut.clear();
+        this.view.update({ type:"message-ready-clear" });
+        // this.project.queryOut.show(true);
         this.langServer.query(query, term, this.queryRouteId);
       }
     } catch (err) {

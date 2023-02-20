@@ -215,49 +215,79 @@ span[class~=charsRemoved][class~=substitution]::before {
   border-top-color: var(--vscode-coq-subgoalSeparator);
 }
 
-.richpp .constr-notation {
-  color: var(--vscode-coq-termNotation);
-}
-.richpp .constr-keyword {
-  color: var(--vscode-coq-termKeyword);
-}
+
+/* complying with the order of https://github.com/coq/coq/blob/master/ide/coqide/preferences.ml */
+/* FIXME: need to put this part into package.json */
 .richpp .constr-evar {
-  color: var(--vscode-coq-termEvar);
+  color: var(--vscode-coq-termEvarColor);
+  font-weight: var(--vscode-coq-termEvarFontWeight);
   font-style: italic;
 }
-.richpp .constr-path {
-  color: var(--vscode-coq-termPath);
-}
-.richpp .constr-reference {
-  color: var(--vscode-coq-termReference);
+.richpp .constr-keyword {
+  color: var(--vscode-coq-termKeywordColor);
+  /* font-weight: var(--vscode-coq-termKeywordFontWeight); */
+  font-weight:normal
 }
 .richpp .constr-type {
-  color: var(--vscode-coq-termType);
+  color: var(--vscode-coq-termTypeColor);
+  font-weight: var(--vscode-coq-termTypeFontWeight);
+}
+.richpp .constr-notation {
+  color: var(--vscode-coq-termNotationColor);
+  font-weight: var(--vscode-coq-termNotationFontWeight);
+}
+.richpp .constr-reference {
+  color: var(--vscode-coq-termReferenceColor);
+  font-weight: var(--vscode-coq-termReferenceFontWeight);
+}
+.richpp .constr-path {
+  color: var(--vscode-coq-termPathColor);
+  font-weight: var(--vscode-coq-termPathFontWeight);
 }
 .richpp .constr-variable {
-  color: var(--vscode-coq-termVariable);
+  color: var(--vscode-coq-termVariableColor);
+  font-weight: var(--vscode-coq-termVariableFontWeight);
 }
 .richpp .message-debug {
-  color: var(--vscode-coq-debugMessage);
+  color: var(--vscode-coq-debugMessageColor);
+  font-weight: var(--vscode-coq-debugMessageFontWeight);
 }
 .richpp .message-error {
-  color: var(--vscode-coq-errorMessage);
+  color: var(--vscode-coq-errorMessageColor);
+  font-weight: var(--vscode-coq-errorMessageFontWeight);
   text-decoration: underline;
 }
 .richpp .message-warning {
-  color: var(--vscode-coq-warningMessage);
+  color: var(--vscode-coq-warningMessageColor);
+  font-weight: var(--vscode-coq-warningMessageFontWeight);
+}
+.richpp .message-prompt {
+  color: var(--vscode-coq-promptMessageColor);
+  font-weight: var(--vscode-coq-promptMessageFontWeight);
+}
+.richpp .module-definition {
+  color: var(--vscode-coq-moduleDefinitionColor);
+  font-weight: var(--vscode-coq-moduleDefinitionFontWeight);
 }
 .richpp .module-keyword {
-  color: var(--vscode-coq-moduleKeyword);
+  color: var(--vscode-coq-moduleKeywordColor);
+  font-weight: var(--vscode-coq-moduleKeywordFontWeight);
 }
 .richpp .tactic-keyword {
-  color: var(--vscode-coq-tacticKeyword);
+  color: var(--vscode-coq-tacticKeywordColor);
+  font-weight: var(--vscode-coq-tacticKeywordFontWeight);
 }
 .richpp .tactic-primitive {
-  color: var(--vscode-coq-tacticPrimitive);
+  color: var(--vscode-coq-tacticPrimitiveColor);
+  font-weight: var(--vscode-coq-tacticPrimitiveFontWeight);
 }
 .richpp .tactic-string {
-  color: var(--vscode-coq-tacticString);
+  color: var(--vscode-coq-tacticStringColor);
+  font-weight: var(--vscode-coq-tacticStringFontWeight);
+}
+
+pre {
+  font-family: var(--vscode-editor-font-family);
 }
 
 .panels {
@@ -279,4 +309,40 @@ vscode-panel-tab {
 
 .given-up-goals-warning {
   padding-bottom: 10px;
+}
+
+:root {
+  --vscode-coq-termEvarColor:initial;
+  --vscode-coq-termEvarFontWeight:initial;
+  --vscode-coq-termKeywordColor:rgb(0, 173, 0);
+  --vscode-coq-termKeywordFontWeight:bold;
+  --vscode-coq-termTypeColor:orange;
+  --vscode-coq-termTypeFontWeight:bold;
+  --vscode-coq-termNotationColor:chocolate;
+  --vscode-coq-termNotationFontWeight:initial;
+  --vscode-coq-termReferenceColor:rgb(0, 173, 0);
+  --vscode-coq-termReferenceFontWeight:initial;
+  --vscode-coq-termPathColor:blueviolet;
+  --vscode-coq-termPathFontWeight:initial;
+  --vscode-coq-termVariableColor:initial;
+  --vscode-coq-termVariableFontWeight:initial;
+  --vscode-coq-debugMessageColor:initial;
+  --vscode-coq-debugMessageFontWeight:initial;
+  --vscode-coq-errorMessageColor:initial;
+  --vscode-coq-errorMessageFontWeight:initial;
+  --vscode-coq-warningMessageColor:initial;
+  --vscode-coq-warningMessageFontWeight:initial;
+  --vscode-coq-promptMessageColor:initial;
+  --vscode-coq-promptMessageFontWeight:initial;
+  --vscode-coq-moduleDefinitionColor:orangered;
+  --vscode-coq-moduleDefinitionFontWeight:bold;
+  --vscode-coq-moduleKeywordColor:initial;
+  --vscode-coq-moduleKeywordFontWeight:initial;
+  --vscode-coq-tacticKeywordColor:initial;
+  --vscode-coq-tacticKeywordFontWeight:initial;
+  --vscode-coq-tacticPrimitiveColor:initial;
+  --vscode-coq-tacticPrimitiveFontWeight:initial;
+  --vscode-coq-tacticStringColor:initial;
+  --vscode-coq-tacticStringFontWeight:initial;
+  --vscode-coq-hypothesisIdent:lime;
 }

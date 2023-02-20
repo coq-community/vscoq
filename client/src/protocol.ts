@@ -166,6 +166,10 @@ export interface CommandInterrupted {
   range: vscode.Range
 }
 
+export interface QueryMessageWrapper {
+  innertext: AnnotatedText
+}
+
 export type FocusPosition = {focus: vscode.Position}
 export type NotRunningTag = {type: 'not-running'}
 export type NoProofTag = {type: 'no-proof'}
@@ -173,13 +177,19 @@ export type FailureTag = {type: 'failure'}
 export type ProofViewTag = {type: 'proof-view'}
 export type InterruptedTag = {type: 'interrupted'}
 export type BusyTag = {type: 'busy'}
+export type QueryMessageTag = {type: 'message-query'}
+export type ReadyClearMessageTag = {type: 'message-ready-clear'}
 export type NotRunningResult = NotRunningTag & {reason: "not-started"|"spawn-failed", coqtop?: string}
 export type BusyResult = BusyTag
 export type NoProofResult = NoProofTag
 export type FailureResult = FailValue & FailureTag
 export type ProofViewResult = ProofView & ProofViewTag
 export type InterruptedResult = CommandInterrupted & InterruptedTag
+export type QueryMessageResult = QueryMessageWrapper & QueryMessageTag
+export type ReadyClearMessageResult = ReadyClearMessageTag
 export type CommandResult =
+  QueryMessageResult |
+  ReadyClearMessageResult |
   NotRunningResult |
   (BusyResult & FocusPosition) |
   (FailureResult & FocusPosition) |

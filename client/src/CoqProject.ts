@@ -26,10 +26,12 @@ export class CoqProject implements vscode.Disposable {
   private subscriptions : vscode.Disposable[] = [];
 
   // lazily created output windows
+  /*
   private infoOutput: vscode.OutputChannel = vscode.window.createOutputChannel('Info');
   private queryOutput: vscode.OutputChannel = vscode.window.createOutputChannel('Queries');
   private noticeOutput: vscode.OutputChannel = vscode.window.createOutputChannel('Notices');
   private debugOutput: vscode.OutputChannel = vscode.window.createOutputChannel('Debug');
+  */
 
   private constructor(context: vscode.ExtensionContext) {
     this.langServer = CoqLanguageServer.create(context);
@@ -70,6 +72,7 @@ export class CoqProject implements vscode.Disposable {
     return CoqProject.instance;
   }
 
+  /*
   public get infoOut(): vscode.OutputChannel {
     return this.infoOutput;
   }
@@ -82,11 +85,14 @@ export class CoqProject implements vscode.Disposable {
   public get debugOut(): vscode.OutputChannel {
     return this.debugOutput;
   }
+  */
 
   dispose() {
+    /*
     this.infoOutput.dispose();
     this.queryOutput.dispose();
     this.noticeOutput.dispose();
+    */
     this.documents.forEach((doc) => doc.dispose());
     this.subscriptions.forEach((s) => s.dispose());
     this.langServer.dispose();

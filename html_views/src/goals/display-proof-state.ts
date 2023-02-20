@@ -236,10 +236,44 @@ export const ProofState = () => {
   return { element, updateState, unmount };
 };
 
+export const OtherInfoView = () => {
+  const messageView = h("vscode-panel-view");
+  const element = h("vscode-panels.panels", [
+    h("vscode-panel-tab", "MESSAGE"),
+    messageView
+  ]);
+
+  let messageViewInnerDiv = h("pre");
+  messageView.appendChild(messageViewInnerDiv);
+  
+  /* 
+    clear-on-demand: 
+    if this flag is set, the message panel will be reset on receiving the next incoming message
+    and this flag will be unset immediately after that
+  */
+  let ready : boolean = true;
+
+  const readyForMessageReset = () => {
+    ready = true;
+  };
+
+  const updateInnerMessage = (s : AnnotatedText) => {
+    if (ready){
+      messageViewInnerDiv.innerHTML = "";
+      ready = false;
+    }
+    messageViewInnerDiv.appendChild(h("span", [...createAnnotatedText(s), "\n"]));
+  };
+
+  return { element, updateInnerMessage, readyForMessageReset };
+};
+
 export const Infoview = () => {
   const element = h("div");
 
   let proofStateInstance: ReturnType<typeof ProofState> | undefined = undefined;
+  let otherViewInstance = OtherInfoView();
+  let divider = h("vscode-divider");
 
   const updateState = (state: CommandResult) => {
     if (state.type === "proof-view") {
@@ -247,9 +281,18 @@ export const Infoview = () => {
         element.innerHTML = "";
         proofStateInstance = ProofState();
         element.appendChild(proofStateInstance.element);
+        element.appendChild(divider);
+        element.appendChild(otherViewInstance.element);
       }
 
       proofStateInstance.updateState(state);
+    } else if (state.type === "message-query") {
+      // if (state.innertext)
+      otherViewInstance.updateInnerMessage(state.innertext);
+      // else
+      //   otherViewInstance.updateInnerMessage("nothing. why?");
+    } else if (state.type === "message-ready-clear") {
+      otherViewInstance.readyForMessageReset();
     } else {
       if (proofStateInstance !== undefined) {
         proofStateInstance.unmount();
@@ -261,6 +304,8 @@ export const Infoview = () => {
       element.innerHTML = "";
       const formatted = h("div.message", message);
       element.appendChild(formatted);
+      element.appendChild(divider);
+      element.appendChild(otherViewInstance.element);
     };
 
     const setErrorMessage = (message: HTMLElement) => {
@@ -270,6 +315,8 @@ export const Infoview = () => {
         h("code#error", message),
       ]);
       element.appendChild(formatted);
+      element.appendChild(divider);
+      element.appendChild(otherViewInstance.element);
     };
 
     if (state.type === "not-running") {
