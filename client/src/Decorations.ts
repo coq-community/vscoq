@@ -9,6 +9,7 @@ interface Decorations {
 }
 
 export let decorationsContinuous : Decorations;
+export let decorationsSemiContinuous : Decorations;
 export let decorationsManual : Decorations;
 
 export function initializeDecorations(context: vscode.ExtensionContext) {
@@ -31,6 +32,23 @@ export function initializeDecorations(context: vscode.ExtensionContext) {
         processed: create({
             overviewRulerColor: '#20b2aa', 
             overviewRulerLane: vscode.OverviewRulerLane.Left,
+        }),
+    };
+
+    decorationsSemiContinuous = {
+        parsed: create({
+            overviewRulerColor: 'cyan', 
+            overviewRulerLane: vscode.OverviewRulerLane.Right,
+        }),
+        processing: create({
+            overviewRulerColor: 'blue', 
+            overviewRulerLane: vscode.OverviewRulerLane.Center,
+        }),
+        processed: create({
+            overviewRulerColor: '#20b2aa', 
+            overviewRulerLane: vscode.OverviewRulerLane.Left,
+            light: {backgroundColor: 'rgba(0,150,0,0.2)'},
+            dark: {backgroundColor: 'rgba(0,150,0,0.2)'},
         }),
     };
 

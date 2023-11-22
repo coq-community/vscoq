@@ -309,24 +309,38 @@ let destroy st =
 
 let last_opt l = try Some (CList.last l).id with Failure _ -> None
 
-let prepare_task task : prepared_task list =
+let prepare_task skip_proofs task : prepared_task list =
   match task with
   | Skip { id; error } -> [PSkip { id; error }]
   | Exec e -> [PExec e]
   | Query e -> [PQuery e]
   | OpaqueProof { terminator; opener_id; tasks; proof_using} ->
-      match !options.delegation_mode with
-      | DelegateProofsToWorkers _ ->
-          log "delegating proofs to workers";
-          let last_step_id = last_opt tasks in
-          let tasks = List.map (fun x -> PExec x) tasks in
-          [PDelegate {terminator_id = terminator.id; opener_id; last_step_id; tasks; proof_using}]
-      | CheckProofsInMaster ->
-          log "running the proof in master as per config";
-          List.map (fun x -> PExec x) tasks @ [PExec terminator]
-      | SkipProofs ->
+      if skip_proofs then
+        [PExec terminator]
+      else
+        (match !options.delegation_mode with
+        | DelegateProofsToWorkers _ ->
+            log "delegating proofs to workers";
+            let last_step_id = last_opt tasks in
+            let tasks = List.map (fun x -> PExec x) tasks in
+            [PDelegate {terminator_id = terminator.id; opener_id; last_step_id; tasks; proof_using}]
+        | CheckProofsInMaster ->
+            log "running the proof in master as per config";
+            List.map (fun x -> PExec x) tasks @ [PExec terminator]
+        | SkipProofs ->
+            log (Printf.sprintf "skipping proof made of %d tasks" (List.length tasks));
+            [PExec terminator])
+  | NonOpaqueProof { terminator; tasks} ->
+    if skip_proofs then
+      [PExec terminator]
+    else
+      (match !options.delegation_mode with
+        | SkipProofs ->
           log (Printf.sprintf "skipping proof made of %d tasks" (List.length tasks));
           [PExec terminator]
+        | _ ->
+            log "running the proof in master as per config";
+            List.map (fun x -> PExec x) tasks @ [PExec terminator])
 
 let id_of_prepared_task = function
   | PSkip { id } -> id
@@ -460,7 +474,7 @@ let execute st (vs, events, interrupted) task =
       let st = update st (id_of_prepared_task task) (Error ((None,Pp.str "interrupted"),None)) in
       (st, vs, events, true)
 
-let build_tasks_for sch st id =
+let build_tasks_for ~skip_proofs sch st id =
   let rec build_tasks id tasks =
     begin match find_fulfilled_opt id st.of_sentence with
     | Some (Success (Some vs)) ->
@@ -483,7 +497,7 @@ let build_tasks_for sch st id =
     end
   in
   let vs, tasks = build_tasks id [] in
-  vs, List.concat_map prepare_task tasks
+  vs, List.concat_map (prepare_task skip_proofs) tasks
 
 let all_errors st =
   List.fold_left (fun acc (id, (p,_)) ->

@@ -38,6 +38,10 @@ type task =
                      proof_using: Vernacexpr.section_subset_expr;
                      tasks : executable_sentence list; (* non empty list *)
                    }
+  | NonOpaqueProof of { terminator: executable_sentence;
+                        opener_id: sentence_id;
+                        tasks : executable_sentence list; (* non empty list *)
+                      }
   | Query of executable_sentence
 
 (*
@@ -106,17 +110,6 @@ let extrude_side_effect ex_sentence st =
   let document_scope = ex_sentence.id :: st.document_scope in
   let proof_blocks = List.map (push_executable_proof_sentence ex_sentence) st.proof_blocks in
   { st with document_scope; proof_blocks }
-
-let flatten_proof_block st =
-  match st.proof_blocks with
-  | [] -> st
-  | [block] ->
-    let document_scope = CList.uniquize @@ List.map (fun x -> x.id) block.proof_sentences @ st.document_scope in
-    { st with document_scope; proof_blocks = [] }
-  | block1 :: block2 :: tl -> (* Nested proofs. TODO check if we want to extrude one level or directly to document scope *)
-    let proof_sentences = CList.uniquize @@ block1.proof_sentences @ block2.proof_sentences in
-    let block2 = { block2 with proof_sentences } in
-    { st with proof_blocks = block2 :: tl }
 
 (*
 [1] Lemma foo : XX.
@@ -193,9 +186,10 @@ let push_state id ast synterp classif st =
         let st = { st with proof_blocks = pop } in
         base_id st, push_ex_sentence ex_sentence st, OpaqueProof { terminator; opener_id = block.opener_id; tasks; proof_using }
       | None ->
-        log "not an opaque proof";
-        let st = flatten_proof_block st in
-        base_id st, push_ex_sentence ex_sentence st, Exec ex_sentence
+        let terminator = { ex_sentence with error_recovery = RAdmitted } in
+        let tasks = List.rev block.proof_sentences in
+        let st = { st with proof_blocks = pop } in
+        base_id st, push_ex_sentence ex_sentence st, NonOpaqueProof { terminator; opener_id = block.opener_id; tasks }
     end
   | VtQuery -> (* queries have no impact, we don't push them *)
     base_id st, st, Query ex_sentence
@@ -211,6 +205,7 @@ let string_of_task (task_id,(base_id,task)) =
   | Skip { id } -> Format.sprintf "Skip %s" (Stateid.to_string id)
   | Exec { id } -> Format.sprintf "Exec %s" (Stateid.to_string id)
   | OpaqueProof { terminator; tasks } -> Format.sprintf "OpaqueProof [%s | %s]" (Stateid.to_string terminator.id) (String.concat "," (List.map (fun task -> Stateid.to_string task.id) tasks))
+  | NonOpaqueProof { terminator; tasks } -> Format.sprintf "NonOpaqueProof [%s | %s]" (Stateid.to_string terminator.id) (String.concat "," (List.map (fun task -> Stateid.to_string task.id) tasks))
   | Query { id } -> Format.sprintf "Query %s" (Stateid.to_string id)
   in
   Format.sprintf "[%s] : [%s] -> %s" (Stateid.to_string task_id) (Option.cata Stateid.to_string "init" base_id) s

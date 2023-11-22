@@ -145,11 +145,13 @@
             "type": "number",
             "enum": [
               0,
-              1
+              1,
+              2
             ],
             "enumItemLabels": [
               "Manual",
-              "Continuous"
+              "Continuous",
+              "SemiContinuous"
             ],
             "default": 1,
             "description": "Configures the proof checking mode for Coq."

@@ -40,20 +40,20 @@ val apply_text_edits : state -> text_edit list -> state
     document is parsed, outdated executions states are invalidated, and the observe
     id is updated. *)
 
-val interpret_to_position : stateful:bool -> state -> Position.t -> (state * events)
+val interpret_to_position : skip_proofs:bool -> stateful:bool -> state -> Position.t -> (state * events)
 (** [interpret_to_position stateful doc pos] navigates to the last sentence ending
     before or at [pos] and returns the resulting state. The [stateful] flag 
     determines if we record the resulting position in the state. *)
 
-val interpret_to_previous : state -> (state * events)
+val interpret_to_previous : skip_proofs:bool -> state -> (state * events)
 (** [interpret_to_previous doc] navigates to the previous sentence in [doc]
     and returns the resulting state. *)
 
-val interpret_to_next : state -> (state * events)
+val interpret_to_next : skip_proofs:bool -> state -> (state * events)
 (** [interpret_to_next doc] navigates to the next sentence in [doc]
     and returns the resulting state. *)
 
-val interpret_to_end : state -> (state * events)
+val interpret_to_end : skip_proofs:bool -> state -> (state * events)
 (** [interpret_to_end doc] navigates to the last sentence in [doc]
     and returns the resulting state. *)
 

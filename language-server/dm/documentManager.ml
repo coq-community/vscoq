@@ -155,12 +155,12 @@ let get_messages st pos =
     | Some (_oloc,msg) -> (DiagnosticSeverity.Error, pp_of_coqpp msg) :: feedback
     | None -> feedback
 
-let interpret_to ~stateful ~background state id : (state * event Sel.Event.t list) =
+let interpret_to ~skip_proofs ~stateful ~background state id : (state * event Sel.Event.t list) =
   match Document.get_sentence state.document id with
   | None -> (state, []) (* TODO error? *)
   | Some { id } ->
     let state = if stateful then { state with observe_id = Some id } else state in
-    let vst_for_next_todo, todo = ExecutionManager.build_tasks_for (Document.schedule state.document) state.execution_state id in
+    let vst_for_next_todo, todo = ExecutionManager.build_tasks_for ~skip_proofs (Document.schedule state.document) state.execution_state id in
     if CList.is_empty todo then
       (state, [])
     else
@@ -168,12 +168,12 @@ let interpret_to ~stateful ~background state id : (state * event Sel.Event.t lis
       let event = Sel.now ?priority (Execute {id; vst_for_next_todo; todo; started = Unix.gettimeofday (); background }) in
       (state, [ event ])
 
-let interpret_to_position ~stateful st pos =
+let interpret_to_position ~skip_proofs ~stateful st pos =
   match id_of_pos st pos with
   | None -> (st, []) (* document is empty *)
-  | Some id -> interpret_to ~stateful ~background:false st id
+  | Some id -> interpret_to ~skip_proofs ~stateful ~background:false st id
 
-let interpret_to_previous st =
+let interpret_to_previous ~skip_proofs st =
   match st.observe_id with
   | None -> (st, [])
   | Some oid ->
@@ -184,14 +184,14 @@ let interpret_to_previous st =
       | None -> 
         Vernacstate.unfreeze_full_state st.init_vs; 
         { st with observe_id=None}, []
-      | Some { id } -> interpret_to ~stateful:true ~background:false st id 
+      | Some { id } -> interpret_to ~skip_proofs ~stateful:true ~background:false st id 
 
-let interpret_to_next st =
+let interpret_to_next ~skip_proofs st =
   match st.observe_id with
   | None -> 
     begin match Document.get_first_sentence st.document with
     | None -> (st, []) (*The document is empty*)
-    | Some {id} -> interpret_to ~stateful:true ~background:false st id
+    | Some {id} -> interpret_to ~skip_proofs ~stateful:true ~background:false st id
     end
   | Some id ->
     match Document.get_sentence st.document id with
@@ -199,17 +199,17 @@ let interpret_to_next st =
     | Some { stop } ->
       match Document.find_sentence_after st.document (stop+1) with
       | None -> (st, [])
-      | Some {id } -> interpret_to ~stateful:true ~background:false st id
+      | Some {id } -> interpret_to ~skip_proofs ~stateful:true ~background:false st id
 
-let interpret_to_end st =
+let interpret_to_end ~skip_proofs st =
   match Document.get_last_sentence st.document with 
   | None -> (st, [])
-  | Some {id} -> log ("interpret_to_end id = " ^ Stateid.to_string id); interpret_to ~stateful:true ~background:false st id
+  | Some {id} -> log ("interpret_to_end id = " ^ Stateid.to_string id); interpret_to ~skip_proofs ~stateful:true ~background:false st id
 
 let interpret_in_background st =
   match Document.get_last_sentence st.document with 
   | None -> (st, [])
-  | Some {id} -> log ("interpret_to_end id = " ^ Stateid.to_string id); interpret_to ~stateful:true ~background:true st id
+  | Some {id} -> log ("interpret_to_end id = " ^ Stateid.to_string id); interpret_to ~skip_proofs:false ~stateful:true ~background:true st id
 
 let is_above st id1 id2 =
   let range1 = Document.range_of_id st id1 in

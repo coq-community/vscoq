@@ -7,7 +7,7 @@ import {
   integer
 } from 'vscode-languageclient/node';
 
-import {decorationsManual, decorationsContinuous} from './Decorations';
+import {decorationsManual, decorationsContinuous, decorationsSemiContinuous} from './Decorations';
 
 export default class Client extends LanguageClient {
 
@@ -62,6 +62,7 @@ export default class Client extends LanguageClient {
         editors.map(editor => {
             editor.setDecorations(decorationsManual.processed, []);
             editor.setDecorations(decorationsContinuous.processed, []);
+            editor.setDecorations(decorationsSemiContinuous.processed, []);
         });
     }
 
@@ -71,8 +72,10 @@ export default class Client extends LanguageClient {
         editors.map(editor => {
             if(config.mode === 0) {
                 editor.setDecorations(decorationsManual.processed, ranges);
-            } else {
+            } else if (config.mode === 1) {
                 editor.setDecorations(decorationsContinuous.processed, ranges);
+            } else {
+                editor.setDecorations(decorationsSemiContinuous.processed, ranges);
             }
         });
     }

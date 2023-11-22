@@ -43,6 +43,10 @@ type task =
                      proof_using: Vernacexpr.section_subset_expr;
                      tasks : executable_sentence list; (* non empty list *)
                    }
+  | NonOpaqueProof of { terminator: executable_sentence;
+                        opener_id: sentence_id;
+                        tasks : executable_sentence list; (* non empty list *)
+                      }
   | Query of executable_sentence
 
 type schedule

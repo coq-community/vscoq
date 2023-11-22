@@ -37,15 +37,18 @@ module Mode = struct
   type t =
   | Continuous 
   | Manual
+  | SemiContinuous
   [@@deriving yojson]
     
   let yojson_of_t = function
   | Manual -> `Int 0
   | Continuous -> `Int 1
+  | SemiContinuous -> `Int 2
 
   let t_of_yojson = function
   | `Int 0 -> Manual
   | `Int 1 -> Continuous
+  | `Int 2 -> SemiContinuous
   | _ -> Yojson.json_error @@ "invalid value "
 
 end

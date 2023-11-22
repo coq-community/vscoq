@@ -267,7 +267,7 @@ Path: \`${coqTM.getVsCoqTopPath()}\`
             let goalsHook = window.onDidChangeTextEditorSelection(
                 (evt: TextEditorSelectionChangeEvent) => {                    
                     if (evt.textEditor.document.languageId === "coq"
-                        && workspace.getConfiguration('vscoq.proof').mode === 1)
+                        && (workspace.getConfiguration('vscoq.proof').mode === 1 || workspace.getConfiguration('vscoq.proof').mode === 2))
                     {
                         sendInterpretToPoint(evt.textEditor, client);
                     }
