@@ -5,7 +5,7 @@
 
     flake-utils.url = "github:numtide/flake-utils";
 
-    coq-master = { url = "github:coq/coq/8152d125abb0fb7e8cbecf4bd6cd51d8d3e70d78"; }; # Should be kept in sync with PIN_COQ in CI workflow
+    coq-master = { url = "github:rtetley/coq/8564e805201e76853b01ecb56a8a3d62474dfe96"; }; # Should be kept in sync with PIN_COQ in CI workflow
     coq-master.inputs.nixpkgs.follows = "nixpkgs";
 
   };

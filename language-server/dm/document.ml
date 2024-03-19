@@ -52,6 +52,12 @@ type sentence = {
   id : sentence_id;
 }
 
+type comment = {
+  start: int;
+  stop: int;
+  content: string;
+}
+
 type parsing_error = {
   start: int;
   stop: int;
@@ -62,6 +68,7 @@ type document = {
   sentences_by_id : sentence SM.t;
   sentences_by_end : sentence LM.t;
   parsing_errors_by_end : parsing_error LM.t;
+  comments_by_end : comment LM.t;
   schedule : Scheduler.schedule;
   parsed_loc : int;
   raw_doc : RawDocument.t;
@@ -120,11 +127,6 @@ let remove_sentence parsed id =
 let sentences parsed =
   List.map snd @@ SM.bindings parsed.sentences_by_id
   
-type comment = {
-  start : int;
-  stop : int;
-}
-
 type code_line =
   | Sentence of sentence
   | ParsingError of parsing_error
@@ -163,6 +165,8 @@ let sentences_after parsed loc =
 let parsing_errors_before parsed loc =
   LM.filter (fun stop _v -> stop <= loc) parsed.parsing_errors_by_end
 
+let comments_before parsed loc =
+  LM.filter (fun stop _v -> stop <= loc) parsed.comments_by_end
 let get_sentence parsed id =
   SM.find_opt id parsed.sentences_by_id
 
@@ -285,10 +289,13 @@ let parse_one_sentence stream ~st =
   *)
 
 let parse_one_sentence stream ~st =
+  Vernacstate.Synterp.unfreeze st;
+  Flags.record_comments := true;
   let entry = Pvernac.main_entry (Some (Synterp.get_default_proof_mode ())) in
   let pa = Pcoq.Parsable.make stream in
-    Vernacstate.Synterp.unfreeze st;
-    Pcoq.Entry.parse entry pa
+    let sentence = Pcoq.Entry.parse entry pa in
+    let comments = Pcoq.Parsable.comments pa in
+    (sentence, comments)
 
 let rec junk_sentence_end stream =
   match Stream.npeek () 2 stream with
@@ -316,21 +323,21 @@ let get_loc_from_info_or_exn exn =
 [%%endif]
 
 
-let rec parse_more synterp_state stream raw parsed errors =
+let rec parse_more synterp_state stream raw parsed parsed_comments errors =
   let handle_parse_error start msg =
     log @@ "handling parse error at " ^ string_of_int start;
     let stop = Stream.count stream in
     let parsing_error = { msg; start; stop; } in
     let errors = parsing_error :: errors in
-    parse_more synterp_state stream raw parsed errors
+    parse_more synterp_state stream raw parsed parsed_comments errors
   in
   let start = Stream.count stream in
   log @@ "Start of parse is: " ^ (string_of_int start);
   begin
     (* FIXME should we save lexer state? *)
     match parse_one_sentence stream ~st:synterp_state with
-    | None (* EOI *) -> List.rev parsed, errors
-    | Some ast ->
+    | None, _ (* EOI *) -> List.rev parsed, errors, List.rev parsed_comments
+    | Some ast, comments ->
       let stop = Stream.count stream in
       log @@ "Parsed: " ^ (Pp.string_of_ppcmds @@ Ppvernac.pr_vernac ast);
       let begin_line, begin_char, end_char =
@@ -349,7 +356,9 @@ let rec parse_more synterp_state stream raw parsed errors =
           let synterp_state = Vernacstate.Synterp.freeze () in
           let sentence = { parsing_start = start; ast = { ast = entry; classification; tokens }; start = begin_char; stop; synterp_state } in
           let parsed = sentence :: parsed in
-          parse_more synterp_state stream raw parsed errors
+          let comments = List.map (fun ((start, stop), content) -> {start; stop; content}) comments in
+          let parsed_comments = List.append comments parsed_comments in
+          parse_more synterp_state stream raw parsed parsed_comments errors
         with exn ->
           let e, info = Exninfo.capture exn in
           let loc = get_loc_from_info_or_exn exn in
@@ -371,7 +380,7 @@ let rec parse_more synterp_state stream raw parsed errors =
   end
 
 let parse_more synterp_state stream raw =
-  parse_more synterp_state stream raw [] []
+  parse_more synterp_state stream raw [] [] []
 
 let rec unchanged_id id = function
   | [] -> id
@@ -421,14 +430,22 @@ let validate_document ({ parsed_loc; raw_doc; } as document) =
   while Stream.count stream < stop do Stream.junk () stream done;
   log @@ Format.sprintf "Parsing more from pos %i" stop;
   let errors = parsing_errors_before document stop in
-  let new_sentences, new_errors = parse_more synterp_state stream raw_doc (* TODO invalidate first *) in
+  let comments = comments_before document stop in
+  let new_sentences, new_errors, new_comments = parse_more synterp_state stream raw_doc (* TODO invalidate first *) in
   log @@ Format.sprintf "%i new sentences" (List.length new_sentences);
+  log @@ Format.sprintf "%i new comments" (List.length new_comments);
   let unchanged_id, invalid_ids, document = invalidate (stop+1) top_id document new_sentences in
   let parsing_errors_by_end =
     List.fold_left (fun acc (error : parsing_error) -> LM.add error.stop error acc) errors new_errors
   in
+  log @@ "PARSED NEW COMMENTS: ";
+  List.iter (fun (comment: comment) -> log @@ Format.sprintf "[start: %i, stop: %i, comment %s]" comment.start comment.stop comment.content) new_comments;
+  log @@ "------------------";
+  let comments_by_end =
+    List.fold_left (fun acc (comment : comment) -> LM.add comment.stop comment acc) comments new_comments
+  in
   let parsed_loc = pos_at_end document in
-  unchanged_id, invalid_ids, { document with parsed_loc; parsing_errors_by_end }
+  unchanged_id, invalid_ids, { document with parsed_loc; parsing_errors_by_end; comments_by_end}
 
 let create_document init_synterp_state text =
   let raw_doc = RawDocument.create text in
@@ -437,6 +454,7 @@ let create_document init_synterp_state text =
       sentences_by_id = SM.empty;
       sentences_by_end = LM.empty;
       parsing_errors_by_end = LM.empty;
+      comments_by_end = LM.empty;
       schedule = initial_schedule;
       init_synterp_state;
     }
