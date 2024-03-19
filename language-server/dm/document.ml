@@ -439,7 +439,7 @@ let validate_document ({ parsed_loc; raw_doc; } as document) =
     List.fold_left (fun acc (error : parsing_error) -> LM.add error.stop error acc) errors new_errors
   in
   log @@ "PARSED NEW COMMENTS: ";
-  List.iter (fun comment -> log @@ Format.sprintf "comment is: %s" comment.content) new_comments;
+  List.iter (fun (comment: comment) -> log @@ Format.sprintf "[start: %i, stop: %i, comment %s]" comment.start comment.stop comment.content) new_comments;
   log @@ "------------------";
   let comments_by_end =
     List.fold_left (fun acc (comment : comment) -> LM.add comment.stop comment acc) comments new_comments
