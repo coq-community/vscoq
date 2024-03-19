@@ -72,6 +72,7 @@ type sentence = {
 type comment = {
   start : int;
   stop : int;
+  content: string;
 }
 
 type code_line =
