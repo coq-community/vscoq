@@ -274,6 +274,8 @@ let textDocumentDidSave params =
   [] (* TODO handle properly *)
 
 let textDocumentDidClose params =
+  let Lsp.Types.DidCloseTextDocumentParams.{ textDocument } = params in
+  Hashtbl.remove states (DocumentUri.to_path textDocument.uri);
   [] (* TODO handle properly *)
 
 let textDocumentHover id params = 
