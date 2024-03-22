@@ -476,7 +476,8 @@ let print st pos ~pattern =
   | Some (sigma, env) -> 
     let qid = parse_entry st loc (Pcoq.Prim.smart_global) pattern in
     let udecl = None in (*TODO*)
-    Ok ( pp_of_coqpp @@ Prettyp.print_name env sigma qid udecl )
+    let access = Library.indirect_accessor[@@warning "-3"] in
+    Ok ( pp_of_coqpp @@ Prettyp.print_name access env sigma qid udecl )
 
 module Internal = struct
 
