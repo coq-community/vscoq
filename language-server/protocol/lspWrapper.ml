@@ -40,6 +40,8 @@ module Range = struct
     let (<=) x y = Position.compare x y <= 0 in
     in_.start <= start && end_ <= in_.end_
 
+  let to_string range = Format.sprintf ("Range (start: %s, end: %s)") (Position.to_string range.start) (Position.to_string range.end_)
+
 end 
 
 module DiagnosticSeverity = struct
@@ -61,6 +63,13 @@ type query_result =
     name : pp;
     statement : pp;
   } [@@deriving yojson]
+
+type overview = {
+  uri : DocumentUri.t;
+  preparedRange: Range.t list;
+  processingRange : Range.t list;
+  processedRange : Range.t list;
+} [@@deriving yojson]
 
 type notification =
   | QueryResultNotification of query_result

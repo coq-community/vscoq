@@ -84,16 +84,6 @@ module Notification = struct
 
   module Server = struct
 
-    module UpdateHighlightsParams = struct
-
-      type t = {
-        uri : DocumentUri.t;
-        processingRange : Range.t list;
-        processedRange : Range.t list;
-      } [@@deriving yojson]
-
-    end
-
     module MoveCursorParams = struct
       
       type t = {
@@ -114,7 +104,7 @@ module Notification = struct
 
     type t =
     | Std of Lsp.Server_notification.t
-    | UpdateHighlights of UpdateHighlightsParams.t
+    | UpdateHighlights of overview
     | MoveCursor of MoveCursorParams.t
     | ProofView of ProofViewParams.t
     | SearchResult of query_result
@@ -124,7 +114,7 @@ module Notification = struct
         Lsp.Server_notification.to_jsonrpc notification
       | UpdateHighlights params ->
         let method_ = "vscoq/updateHighlights" in
-        let params = UpdateHighlightsParams.yojson_of_t params in
+        let params = yojson_of_overview params in
         let params = Some (Jsonrpc.Structured.t_of_yojson params) in
         Jsonrpc.Notification.{ method_; params }
       | ProofView params -> 

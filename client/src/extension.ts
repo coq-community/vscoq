@@ -216,6 +216,7 @@ export function activate(context: ExtensionContext) {
         
             client.saveHighlights(
                 notification.uri,
+                notification.preparedRange,
                 notification.processingRange,
                 notification.processedRange
             );

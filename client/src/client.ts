@@ -12,7 +12,9 @@ import {decorationsManual, decorationsContinuous} from './Decorations';
 export default class Client extends LanguageClient {
 
 	private static _channel: any = vscode.window.createOutputChannel('VsCoq');
-    private _decorations: Map<String, vscode.Range[]> = new Map<String, vscode.Range[]>();
+    private _decorationsPrepared: Map<String, vscode.Range[]> = new Map<String, vscode.Range[]>();
+    private _decorationsProcessed: Map<String, vscode.Range[]> = new Map<String, vscode.Range[]>();
+    private _decorationsProcessing: Map<String, vscode.Range[]> = new Map<String, vscode.Range[]>();
 
 	constructor(
         serverOptions: ServerOptions,
@@ -32,18 +34,26 @@ export default class Client extends LanguageClient {
         Client._channel.appendLine(message);
     }
 
-    public saveHighlights(uri: String, processingRange: vscode.Range[], processedRange: vscode.Range[]) {
-        this._decorations.set(uri, processedRange);
+    public saveHighlights(uri: String, preparedRange: vscode.Range[], processingRange: vscode.Range[], processedRange: vscode.Range[]) {
+        this._decorationsPrepared.set(uri, preparedRange);
+        this._decorationsProcessing.set(uri, processingRange);
+        this._decorationsProcessed.set(uri, processedRange);
     }
 
     public updateHightlights() {
-        for(let entry of this._decorations.entries()) {
+        for(let entry of this._decorationsPrepared.entries()) {
+            this.updateDocumentEditors(entry[0], entry[1], "prepared");
+        }
+        for(let entry of this._decorationsProcessing.entries()) {
+            this.updateDocumentEditors(entry[0], entry[1], "processing");
+        }
+        for(let entry of this._decorationsProcessed.entries()) {
             this.updateDocumentEditors(entry[0], entry[1]);
         }
     };
 
     public resetHighlights() {
-        for(let entry of this._decorations.entries()) {
+        for(let entry of this._decorationsProcessed.entries()) {
             this.resetDocumentEditors(entry[0]);
         }
     }
@@ -57,19 +67,39 @@ export default class Client extends LanguageClient {
     private resetDocumentEditors(uri: String) {
         const editors = this.getDocumentEditors(uri);
         editors.map(editor => {
+            editor.setDecorations(decorationsManual.prepared, []);
+            editor.setDecorations(decorationsContinuous.prepared, []);
+            editor.setDecorations(decorationsManual.processing, []);
+            editor.setDecorations(decorationsContinuous.processing, []);
             editor.setDecorations(decorationsManual.processed, []);
             editor.setDecorations(decorationsContinuous.processed, []);
         });
     }
 
-    private updateDocumentEditors(uri: String, ranges: vscode.Range[]) {
+    private updateDocumentEditors(uri: String, ranges: vscode.Range[], type: String = "processed") {
         const config = vscode.workspace.getConfiguration('vscoq.proof');
         const editors = this.getDocumentEditors(uri);
         editors.map(editor => {
             if(config.mode === 0) {
-                editor.setDecorations(decorationsManual.processed, ranges);
+                if(type === "prepared") {
+                    editor.setDecorations(decorationsManual.prepared, ranges);
+                }
+                if(type === "processing") {
+                    editor.setDecorations(decorationsManual.processing, ranges);
+                }
+                if (type === "processed") {
+                    editor.setDecorations(decorationsManual.processed, ranges);
+                }
             } else {
-                editor.setDecorations(decorationsContinuous.processed, ranges);
+                if(type === "prepared") {
+                    editor.setDecorations(decorationsContinuous.prepared, ranges);
+                }
+                if(type === "processing") {
+                    editor.setDecorations(decorationsContinuous.processing, ranges);
+                }
+                if (type === "processed") {
+                    editor.setDecorations(decorationsContinuous.processed, ranges);
+                }
             }
         });
     }

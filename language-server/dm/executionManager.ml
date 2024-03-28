@@ -13,6 +13,7 @@
 (**************************************************************************)
 
 open Protocol
+open Protocol.LspWrapper
 open Scheduler
 open Types
 
@@ -75,6 +76,7 @@ type state = {
   sel_feedback_queue : (Feedback.route_id * sentence_id * (Feedback.level * Loc.t option * Pp.t)) Queue.t;
   sel_cancellation_handle : Sel.Event.cancellation_handle;
 }
+
 
 let options = ref default_options
 
@@ -220,6 +222,75 @@ let interp_qed_delayed ~proof_using ~state_id ~st =
   let st = { st with interp } in
   st, success st, assign
 
+let rec insert_or_merge_range r = function
+| [] -> [r]
+| r1 :: l ->
+  if Position.compare r1.Range.end_ r.Range.start == 0 then
+    Range.{ start = r1.Range.start; end_ = r.Range.end_ } :: l
+  else
+    r1 :: (insert_or_merge_range r l)
+
+let rec remove_or_truncate_range r = function
+| [] -> []
+| r1 :: l ->
+  if Position.compare r1.Range.start r.Range.start == 0 && 
+    Position.compare r1.Range.end_ r.Range.end_ == 0
+  then
+    l
+  else if Position.compare r1.Range.start r.Range.start == 0
+  then
+    Range.{ start = r.Range.end_; end_ = r1.Range.end_} :: l
+  else
+    r1 :: (remove_or_truncate_range r l)
+
+let update_processed id state document overview =
+  let {prepared; processing; processed} = overview in
+  let range = Document.range_of_id_with_blank_space document id in
+  match SM.find id state.of_sentence with
+  | (s, _) ->
+    begin match s with
+    | Done s ->
+      begin match s with
+      | Success _ ->
+        let processed = insert_or_merge_range range processed in
+        let processing = remove_or_truncate_range range processing in 
+        let prepared = remove_or_truncate_range range prepared in
+        {prepared; processing; processed}
+      | Error _ ->
+        let processing = remove_or_truncate_range range processing in 
+        let prepared = remove_or_truncate_range range prepared in
+        {prepared; processing; processed}
+      end
+    | _ -> log @@ "TRYING TO UPDATE DELEGATED ID: " ^ Stateid.to_string id; {prepared; processing; processed}
+    end
+  | exception Not_found ->
+    log @@ "Trying to get overview with non-existing state id " ^ Stateid.to_string id;
+    {prepared; processing; processed}
+
+let update_processing task processing prepared document =
+  match task with
+  | PDelegate { opener_id; terminator_id; } ->
+    let opener_range = Document.range_of_id_with_blank_space document opener_id in
+    let terminator_range = Document.range_of_id_with_blank_space document terminator_id in
+    let range = Range.create ~end_:terminator_range.end_ ~start:opener_range.start in
+    insert_or_merge_range range processing, remove_or_truncate_range range prepared
+  | PSkip { id } | PExec { id } | PQuery { id } ->
+    let range = Document.range_of_id_with_blank_space document id in
+    insert_or_merge_range range processing, remove_or_truncate_range range prepared
+
+let update_overview task todo state document overview =
+  let {processed; processing; prepared} = 
+  match task with 
+  | PDelegate _ -> overview
+  | PSkip { id } | PExec { id } | PQuery { id } ->
+    update_processed id state document overview
+  in
+  let processing, prepared = match todo with
+  | [] -> processing, prepared
+  | next :: _ -> update_processing next processing prepared document in
+  {processing; processed; prepared}
+
+
 let update_all id v fl state =
   { state with of_sentence = SM.add id (v, fl) state.of_sentence }
 ;;
@@ -275,28 +346,38 @@ let handle_feedback id fb state =
 let handle_event event state =
   match event with
   | LocalFeedback (q,_,id,fb) ->
-      Some (handle_feedback id fb state), [local_feedback q]
+      None, Some (handle_feedback id fb state), [local_feedback q]
   | ProofWorkerEvent event ->
       let update, events = ProofWorker.handle_event event in
-      let state =
+      let state, id =
         match update with
-        | None -> None
+        | None -> None, None
         | Some (ProofJob.AppendFeedback(_,id,fb)) ->
-            Some (handle_feedback id fb state)
+            Some (handle_feedback id fb state), None
         | Some (ProofJob.UpdateExecStatus(id,v)) ->
             match SM.find id state.of_sentence, v with
             | (Delegated (_,completion), fl), _ ->
                 Option.default ignore completion v;
-                Some (update_all id (Done v) fl state)
+                Some (update_all id (Done v) fl state), Some id
             | (Done (Success s), fl), Error (err,_) ->
                 (* This only happens when a Qed closing a delegated proof
                    receives an updated by a worker saying that the proof is
                    not completed *)
-                Some (update_all id (Done (Error (err,s))) fl state)
-            | (Done _, _), _ -> None
-            | exception Not_found -> None (* TODO: is this possible? *)
+                Some (update_all id (Done (Error (err,s))) fl state), Some id
+            | (Done _, _), _ -> None, None
+            | exception Not_found -> None, None (* TODO: is this possible? *)
       in
-      inject_proof_events state events
+      let state, events = inject_proof_events state events in
+      let log_change id state =
+      match SM.find id state.of_sentence with
+      | Done _, _ -> log @@ "STATUS WAS CHANGED"
+      | Delegated _, _ -> log @@ "STATUS IS STILL DELEGATED"
+      in
+      begin match (state, id) with
+      | (Some s, Some id) -> log_change id s
+      | _ -> ()
+      end;
+      id, state, events
 
 let find_fulfilled_opt x m =
   try
@@ -468,29 +549,29 @@ let execute st (vs, events, interrupted) task =
       (st, vs, events, true)
 
 let build_tasks_for sch st id =
-  let rec build_tasks id tasks =
+  let rec build_tasks id tasks st =
     begin match find_fulfilled_opt id st.of_sentence with
     | Some (Success (Some vs)) ->
       (* We reached an already computed state *)
       log @@ "Reached computed state " ^ Stateid.to_string id;
-      vs, tasks
+      vs, tasks, st
     | Some (Error(_,Some vs)) ->
       (* We try to be resilient to an error *)
       log @@ "Error resiliency on state " ^ Stateid.to_string id;
-      vs, tasks
+      vs, tasks, st
     | _ ->
       log @@ "Non (locally) computed state " ^ Stateid.to_string id;
       let (base_id, task) = task_for_sentence sch id in
       begin match base_id with
       | None -> (* task should be executed in initial state *)
-        st.initial, task :: tasks
+        st.initial, task :: tasks, st
       | Some base_id ->
-        build_tasks base_id (task::tasks)
+        build_tasks base_id (task::tasks) st
       end
     end
   in
-  let vs, tasks = build_tasks id [] in
-  vs, List.concat_map prepare_task tasks
+  let vs, tasks, st = build_tasks id [] st in
+  vs, List.concat_map prepare_task tasks, st
 
 let all_errors st =
   List.fold_left (fun acc (id, (p,_)) ->

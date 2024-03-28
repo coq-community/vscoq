@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { DidChangeConfigurationParams } from 'vscode-languageclient';
 
 interface Decorations {
-  parsed: vscode.TextEditorDecorationType;
+  prepared: vscode.TextEditorDecorationType;
   processing: vscode.TextEditorDecorationType;
   processed: vscode.TextEditorDecorationType
 }
@@ -20,7 +20,7 @@ export function initializeDecorations(context: vscode.ExtensionContext) {
     }
 
     decorationsContinuous = {
-        parsed: create({
+        prepared: create({
             overviewRulerColor: 'cyan', 
             overviewRulerLane: vscode.OverviewRulerLane.Right,
         }),
@@ -35,7 +35,7 @@ export function initializeDecorations(context: vscode.ExtensionContext) {
     };
 
     decorationsManual = {
-        parsed: create({
+        prepared: create({
             outlineWidth: '1px',
             outlineStyle: 'solid', 
             overviewRulerColor: 'cyan', 

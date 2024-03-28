@@ -16,6 +16,12 @@ open Lsp.Types
 type sentence_id = Stateid.t
 type sentence_id_set = Stateid.Set.t
 
+type exec_overview = {
+  prepared: Range.t list;
+  processing : Range.t list;
+  processed : Range.t list;
+}
+
 type text_edit = Range.t * string
 
 type link = {

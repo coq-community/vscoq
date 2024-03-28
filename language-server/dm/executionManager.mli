@@ -66,13 +66,16 @@ val get_initial_context : state -> Evd.evar_map * Environ.env
 val get_vernac_state : state -> sentence_id -> Vernacstate.t option
 
 (** Events for the main loop *)
-val handle_event : event -> state -> (state option * events)
+val handle_event : event -> state -> (sentence_id option * state option * events)
 
 (** Execution happens in two steps. In particular the event one takes only
     one task at a time to ease checking for interruption *)
 type prepared_task
-val build_tasks_for : Scheduler.schedule -> state -> sentence_id -> Vernacstate.t * prepared_task list
+val build_tasks_for : Scheduler.schedule -> state -> sentence_id -> Vernacstate.t * prepared_task list * state
 val execute : state -> Vernacstate.t * events * bool -> prepared_task -> (state * Vernacstate.t * events * bool)
+
+val update_overview : prepared_task -> prepared_task list -> state -> Document.document -> exec_overview -> exec_overview
+val update_processed : sentence_id -> state -> Document.document -> exec_overview -> exec_overview
 
 (** Coq toplevels for delegation without fork *)
 module ProofWorkerProcess : sig
