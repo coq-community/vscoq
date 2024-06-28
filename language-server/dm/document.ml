@@ -22,6 +22,20 @@ module LM = Map.Make (Int)
 
 module SM = Map.Make (Stateid)
 
+type proof_block_type =
+  | TheoremKind of Decls.theorem_kind
+  | DefinitionType of Decls.definition_object_kind
+
+type outline_element = {
+  id: sentence_id;
+  name: string;
+  type_: proof_block_type;
+  statement: string;
+  range: Range.t
+}
+
+type outline = outline_element list
+
 type parsed_ast = {
   ast: Synterp.vernac_control_entry;
   classification: Vernacextend.vernac_classification;
@@ -70,14 +84,11 @@ type document = {
   parsing_errors_by_end : parsing_error LM.t;
   comments_by_end : comment LM.t;
   schedule : Scheduler.schedule;
+  outline : outline;
   parsed_loc : int;
   raw_doc : RawDocument.t;
   init_synterp_state : Vernacstate.Synterp.t;
 }
-
-let schedule doc = doc.schedule
-
-let raw_document doc = doc.raw_doc
 
 let range_of_sentence raw (sentence : sentence) =
   let start = RawDocument.position_of_loc raw sentence.start in
@@ -99,6 +110,63 @@ let range_of_id_with_blank_space document id =
   | None -> CErrors.anomaly Pp.(str"Trying to get range of non-existing sentence " ++ Stateid.print id)
   | Some sentence -> range_of_sentence_with_blank_space document.raw_doc sentence
 
+
+let record_outline document id (ast : Synterp.vernac_control_entry) classif (outline : outline) =
+  let open Vernacextend in
+  match classif with
+  | VtStartProof (_, names) ->
+    let vernac_gen_expr = ast.v.expr in
+    let type_ =
+      begin match vernac_gen_expr with
+      | VernacSynterp _ -> None
+      | VernacSynPure pure -> 
+        match pure with
+        | Vernacexpr.VernacStartTheoremProof (kind, _) -> Some (TheoremKind kind)
+        | Vernacexpr.VernacDefinition ((_, def), _, _) -> Some (DefinitionType def)
+        | _ -> None
+      end in
+    let name = begin match names with
+    |[] -> "default"
+    | n :: _ -> Names.Id.to_string n 
+    end in
+    let statement = "" in
+    begin match type_ with
+    | None -> outline
+    | Some type_ ->
+      let range = range_of_id document id in
+      let element = {id; type_; name; statement; range} in
+      element :: outline
+    end
+  | VtSideff (names, _) ->
+    let vernac_gen_expr = ast.v.expr in
+    let type_ =
+      begin match vernac_gen_expr with
+      | VernacSynterp _ -> None
+      | VernacSynPure pure -> 
+        match pure with
+        | Vernacexpr.VernacStartTheoremProof (kind, _) -> Some (TheoremKind kind)
+        | Vernacexpr.VernacDefinition ((_, def), _, _) -> Some (DefinitionType def)
+        | _ -> None
+      end in
+    let name = begin match names with
+    |[] -> "default"
+    | n :: _ -> Names.Id.to_string n 
+    end in
+    let statement = "" in
+    begin match type_ with
+    | None -> outline
+    | Some type_ ->
+      let range = range_of_id document id in
+      let element = {id; type_; name; statement; range} in
+      element :: outline
+    end
+  | _ -> outline
+
+let schedule doc = doc.schedule
+
+let raw_document doc = doc.raw_doc
+
+let outline doc = doc.outline
 let parse_errors parsed =
   List.map snd (LM.bindings parsed.parsing_errors_by_end)
 
@@ -110,10 +178,13 @@ let add_sentence parsed parsing_start start stop (ast: parsed_ast) synterp_state
   in
   (* FIXME may invalidate scheduler_state_XXX for following sentences -> propagate? *)
   let sentence = { parsing_start; start; stop; ast; id; synterp_state; scheduler_state_before; scheduler_state_after } in
-  { parsed with sentences_by_end = LM.add stop sentence parsed.sentences_by_end;
+  let document = { 
+    parsed with sentences_by_end = LM.add stop sentence parsed.sentences_by_end;
     sentences_by_id = SM.add id sentence parsed.sentences_by_id;
-    schedule
-  }, scheduler_state_after
+    schedule;
+  } in
+  let outline = record_outline document id ast.ast ast.classification parsed.outline in
+  {document with outline}, scheduler_state_after
 
 let remove_sentence parsed id =
   match SM.find_opt id parsed.sentences_by_id with
@@ -470,6 +541,7 @@ let create_document init_synterp_state text =
       parsing_errors_by_end = LM.empty;
       comments_by_end = LM.empty;
       schedule = initial_schedule;
+      outline = [];
       init_synterp_state;
     }
 

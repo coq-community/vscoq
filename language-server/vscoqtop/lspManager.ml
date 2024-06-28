@@ -142,11 +142,13 @@ let do_initialize id params =
   end;
   let textDocumentSync = `TextDocumentSyncKind TextDocumentSyncKind.Incremental in
   let completionProvider = CompletionOptions.create ~resolveProvider:false () in
+  let documentSymbolProvider = `Bool true in
   let hoverProvider = `Bool true in
   let capabilities = ServerCapabilities.create
     ~textDocumentSync
     ~completionProvider
     ~hoverProvider
+    ~documentSymbolProvider
   ()
   in
   let initialize_result = Lsp.Types.InitializeResult.{
@@ -387,6 +389,14 @@ let textDocumentCompletion id params =
       let message = e in
       Error(message), []
 
+let documentSymbol id params =
+  let Lsp.Types.DocumentSymbolParams.{ textDocument = {uri}} = params in
+  match Hashtbl.find_opt states (DocumentUri.to_path uri) with
+  | None -> log @@ "[documentSymbol] ignoring event on non existant document"; Error("Document does not exist"), []
+  | Some st -> log @@ "[documentSymbol] getting symbols";
+    let symbols = Dm.DocumentManager.get_document_symbols st in
+    Ok(Some (`DocumentSymbol symbols)), []
+
 let coqtopResetCoq id params =
   let Request.Client.ResetParams.{ textDocument = { uri } } = params in
   match Hashtbl.find_opt states (DocumentUri.to_path uri) with
@@ -478,6 +488,8 @@ let dispatch_std_request : type a. Jsonrpc.Id.t -> a Lsp.Client_request.t -> (a,
     textDocumentCompletion id params
   | TextDocumentHover params ->
     textDocumentHover id params, []
+  | DocumentSymbol params ->
+    documentSymbol id params
   | UnknownRequest _ | _  -> Error "Received unknown request", []
 
 let dispatch_request : type a. Jsonrpc.Id.t -> a Request.Client.t -> (a,string) result * events =

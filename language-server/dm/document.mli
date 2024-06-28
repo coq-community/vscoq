@@ -22,7 +22,23 @@ open Lsp.Types
     sentences *)
 type document
 
+type proof_block_type =
+  | TheoremKind of Decls.theorem_kind
+  | DefinitionType of Decls.definition_object_kind
+
+type outline_element = {
+    id: sentence_id;
+    name: string;
+    type_: proof_block_type;
+    statement: string;
+    range: Range.t
+  }
+
+type outline = outline_element list
+
 val raw_document : document -> RawDocument.t
+
+val outline : document -> outline
 
 val create_document : Vernacstate.Synterp.t -> string -> document
 (** [create_document init_synterp_state text] creates a fresh document with content defined by

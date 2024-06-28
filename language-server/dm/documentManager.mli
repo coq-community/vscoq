@@ -87,6 +87,8 @@ val observe_id_range : state -> Range.t option
 
 val get_messages : state -> Position.t option -> (DiagnosticSeverity.t * pp) list
 
+val get_document_symbols : state -> DocumentSymbol.t list
+
 val all_diagnostics : state -> Diagnostic.t list
 (** all_diagnostics [doc] returns the diagnostics corresponding to the sentences
     that have been executed in [doc]. *)

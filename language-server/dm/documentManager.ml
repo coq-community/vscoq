@@ -188,6 +188,18 @@ let clear_observe_id st =
 let reset_to_top st =
   { st with observe_id = Some Top }
 
+let get_document_symbols st =
+  let outline = Document.outline st.document in
+  let to_document_symbol elem =
+    let Document.{name; statement; range; type_} = elem in
+    let kind = begin match type_ with
+    | TheoremKind _ -> SymbolKind.Function
+    | DefinitionType _ ->SymbolKind.Variable
+    end in
+    DocumentSymbol.{name; detail=(Some statement); kind; range; selectionRange=range; children=None; deprecated=None; tags=None;}
+  in
+  List.map to_document_symbol outline
+
 let interpret_to st id =
   let observe_id = if st.observe_id = None then None else (Some (Id id)) in
   let st = { st with observe_id} in

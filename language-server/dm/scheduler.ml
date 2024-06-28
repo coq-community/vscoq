@@ -44,6 +44,8 @@ type task =
   | SubProof of ast list
   | ModuleWithSignature of ast list
 *)
+
+
 type proof_block = {
   proof_sentences : executable_sentence list;
   opener_id : sentence_id;
