@@ -80,6 +80,9 @@ export class CoqProject {
 
     this.notReady();
     this.settingsCoqTopArgs = newSettings.coqtop.args;
+    if (newSettings.coqtop.threadCount) {
+      this.settingsCoqTopArgs = this.settingsCoqTopArgs.concat(["-async-proofs-j", newSettings.coqtop.threadCount.toString()]);
+    }
     this.currentSettings = newSettings;
 
     if(newSettings.coq.coqProjectRoot ){

@@ -37,6 +37,7 @@ export interface CoqTopSettings {
   coqtopExe: string;
   /** Name of coqidetop binary. @default `"coqidetop.opt"` */
   coqidetopExe: string;
+  threadCount?: number;
   /** A list of arguments to send to coqtop. @default `[]` */
   args: string[];
   /** When should an instance of coqtop be started for a Coq script */

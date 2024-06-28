@@ -75,9 +75,12 @@
           "default": "coqidetop.opt",
           "description": "Name of the coqidetop binary (alternatively, hoqidetop)."
         },
+        "coqtop.threadCount": {
+          "type": ["null", "number"],
+          "markdownDescription": "Number of proof workers to enable."
+        },
         "coqtop.args": {
           "type": "array",
-          "default": [],
           "markdownDescription": "A list of arguments to send to coqtop. Use seperate elements instead of spaces to seperate each argument, especially when a flag expects another trailing argument, e.g. `[\"-I\",\"./bin\"]` instead of `[\"-I ./bin\"]`"
         },
         "coqtop.startOn": {
