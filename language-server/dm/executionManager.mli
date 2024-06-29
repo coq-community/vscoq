@@ -37,7 +37,7 @@ type state
 type event
 type events = event Sel.Event.t list
 
-type feedback_message = Feedback.level * Loc.t option * Pp.t
+type feedback_message = Feedback.level * Loc.t option * Quickfix.t list * Pp.t
 
 val pr_event : event -> Pp.t
 
@@ -51,7 +51,7 @@ val invalidate : Document.document -> Scheduler.schedule -> sentence_id -> state
 
 val error : state -> sentence_id -> (Loc.t option * Pp.t) option
 val feedback :  state -> sentence_id -> feedback_message list
-val all_errors : state -> (sentence_id * (Loc.t option * Pp.t)) list
+val all_errors : state -> (sentence_id * (Loc.t option * Pp.t * Quickfix.t list option)) list
 val all_feedback : state -> (sentence_id * feedback_message) list
 
 val shift_diagnostics_locs : state -> start:int -> offset:int -> state

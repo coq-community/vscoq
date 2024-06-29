@@ -49,7 +49,7 @@ module type Job = sig
   val binary_name : string
   val initial_pool_size : int
   type update_request
-  val appendFeedback : Feedback.route_id * sentence_id -> (Feedback.level * Loc.t option * Pp.t) -> update_request
+  val appendFeedback : Feedback.route_id * sentence_id -> (Feedback.level * Loc.t option * Quickfix.t list * Pp.t) -> update_request
 end
 
 (* One typically created a job id way before the worker is spawned, so we
@@ -66,8 +66,8 @@ let cancel_job (_,id) =
    keep here the conversion (STM) feedback -> (LSP) feedback *)
 
 let install_feedback send =
-  Log.feedback_add_feeder_on_Message (fun route span _ lvl loc _ msg ->
-    send (route,span,(lvl,loc,msg)))
+  Log.feedback_add_feeder_on_Message (fun route span _ lvl loc qf msg ->
+    send (route,span,(lvl,loc, qf, msg)))
     
 module type Worker = sig
   type job_t
@@ -297,7 +297,7 @@ let handle_event = function
         exit 0
       | Error(msg, cleanup_events) ->
         log @@ "worker did not spawn: " ^ msg;
-        (Some(Job.appendFeedback feedback_route (Feedback.Error,None,Pp.str msg)), cleanup_events)
+        (Some(Job.appendFeedback feedback_route (Feedback.Error,None,[],Pp.str msg)), cleanup_events)
     else
       match create_process_worker procname cancellation_handle job with
       | Ok events ->
@@ -305,7 +305,7 @@ let handle_event = function
           (None, events)
       | Error(msg, cleanup_events) ->
           log @@ "worker did not spawn: " ^ msg;
-          (Some(Job.appendFeedback feedback_route (Feedback.Error,None,Pp.str msg)), cleanup_events)
+          (Some(Job.appendFeedback feedback_route (Feedback.Error,None,[],Pp.str msg)), cleanup_events)
 
 
 (* the only option is the socket port *)

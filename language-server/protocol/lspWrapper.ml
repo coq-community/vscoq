@@ -3,7 +3,7 @@
 (*                                 VSCoq                                  *)
 (*                                                                        *)
 (*                   Copyright INRIA and contributors                     *)
-(*       (see version control and README file for authors & dates)        *)
+(*       (see version control and README file for authors & dates)Variables A : Type.        *)
 (*                                                                        *)
 (**************************************************************************)
 (*                                                                        *)
@@ -66,6 +66,10 @@ module Range = struct
 
 end 
 
+module QuickFixData = struct
+  type t = {text: string; range: Range.t} [@@deriving yojson]
+end 
+
 module DiagnosticSeverity = struct
 
   type t = [%import: Lsp.Types.DiagnosticSeverity.t] [@@deriving sexp]
@@ -78,6 +82,37 @@ module DiagnosticSeverity = struct
     | Feedback.Warning -> Warning
     | Feedback.(Info | Debug | Notice) -> Information
 
+end
+
+module FeedbackChannel = struct
+
+  type t = 
+  | Debug 
+  | Info
+  | Notice
+  [@@deriving sexp, yojson]
+
+  let yojson_of_t = function
+  | Debug -> `Int 0
+  | Info -> `Int 1
+  | Notice -> `Int 2
+
+  let t_of_feedback_level = function 
+  | Feedback.Debug -> Some Debug
+  | Feedback.Info -> Some Info 
+  | Feedback.Notice -> Some Notice 
+  | Feedback.(Error | Warning) -> None
+
+end
+
+module CoqFeedback = struct 
+
+  type t = {
+    range: Range.t; 
+    message: string; 
+    channel: FeedbackChannel.t;
+  } [@@deriving sexp, yojson]
+  
 end
 
 type query_result =

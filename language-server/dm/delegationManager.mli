@@ -42,7 +42,7 @@ module type Job = sig
   type update_request
 
   (** Called to handle feedback sent by the worker process *)
-  val appendFeedback : Feedback.route_id * sentence_id -> (Feedback.level * Loc.t option * Pp.t) -> update_request
+  val appendFeedback : Feedback.route_id * sentence_id -> (Feedback.level * Loc.t option * Quickfix.t list * Pp.t) -> update_request
 end
 
 type job_handle

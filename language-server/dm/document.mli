@@ -43,6 +43,7 @@ type parsing_error = {
   start: int; 
   stop: int; 
   msg: string Loc.located;
+  qf: Quickfix.t list option;
 }
 
 val parse_errors : document -> parsing_error list
