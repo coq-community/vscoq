@@ -54,6 +54,7 @@ val feedback :  state -> sentence_id -> feedback_message list
 val all_errors : state -> (sentence_id * (Loc.t option * Pp.t)) list
 val all_feedback : state -> (sentence_id * feedback_message) list
 
+val shift_overview : state -> RawDocument.t -> start:int -> offset:int -> state
 val shift_diagnostics_locs : state -> start:int -> offset:int -> state
 val executed_ids : state -> sentence_id list
 val is_executed : state -> sentence_id -> bool
