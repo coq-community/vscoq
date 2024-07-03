@@ -105,7 +105,6 @@ jobs:
       run: cat /tmp/vscoq_init_log.*
 
   install-windows:
-    if: false
     runs-on: windows-latest
     steps:
     - name: Set git to use LF
