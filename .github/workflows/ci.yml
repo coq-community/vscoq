@@ -118,7 +118,7 @@ jobs:
     - name: Build language server
       run: .\language-server\build-windows-platform.bat
       env:
-        COQ_VERSION: V8.19
+        COQ_VERSION: V8.19.0
 
     - run: C:\ci\cygwin64\bin\bash.exe --login -c 'echo vscoqtop=$(cygpath -m $(which vscoqtop))' >> $Env:GITHUB_ENV
 
