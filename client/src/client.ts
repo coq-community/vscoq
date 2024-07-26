@@ -10,7 +10,7 @@ import { decorationsContinuous, decorationsManual } from "./Decorations";
 
 export default class Client extends LanguageClient {
   private static _channel: any = vscode.window.createOutputChannel("VsCoq");
-  private static _coq_log: any = vscode.window.createOutputChannel("Coq Log");
+  private static _coqLog: any = vscode.window.createOutputChannel("Coq Log");
   private _decorationsPrepared: Map<String, vscode.Range[]> = new Map<
     String,
     vscode.Range[]
@@ -42,7 +42,7 @@ export default class Client extends LanguageClient {
   }
 
   public static writeCoqMessageLog(message: string) {
-    Client._coq_log.appendLine(message);
+    Client._coqLog.appendLine(message);
   }
 
   public saveHighlights(
