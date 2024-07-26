@@ -222,7 +222,7 @@ export function activate(context: ExtensionContext) {
       );
       Client.writeToVscoq2Channel(uri.toString());
       client.sendRequest(req, params).then(
-        (res) => {
+        () => {
           GoalPanel.resetGoalPanel();
         },
         (err) => {
@@ -407,7 +407,7 @@ Path: \`${coqTM.getVsCoqTopPath()}\`
         }),
       );
 
-      let goalsHook = window.onDidChangeTextEditorSelection(
+      window.onDidChangeTextEditorSelection(
         (evt: TextEditorSelectionChangeEvent) => {
           if (
             evt.textEditor.document.languageId === "coq" &&
@@ -418,7 +418,7 @@ Path: \`${coqTM.getVsCoqTopPath()}\`
         },
       );
 
-      window.onDidChangeActiveTextEditor((editor) => {
+      window.onDidChangeActiveTextEditor(() => {
         client.updateHighlights();
       });
     });

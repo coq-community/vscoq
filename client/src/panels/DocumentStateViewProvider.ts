@@ -40,8 +40,8 @@ export class DocumentStateViewProvider implements TextDocumentContentProvider {
   }
 
   async provideTextDocumentContent(
-    uri: Uri,
-    token: CancellationToken,
+    _uri: Uri,
+    _token: CancellationToken,
   ): Promise<string> {
     if (this.textDocument === null) {
       Client.writeToVscoq2Channel(
