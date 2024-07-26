@@ -1,0 +1,15 @@
+# Ignore artifacts:
+build
+coverage
+out/
+dist/
+
+# VSCode
+.vscode
+.vscode-test/
+
+
+# Webviews
+## Ignoring these since they have their own settings
+goal-view-ui
+search-ui
