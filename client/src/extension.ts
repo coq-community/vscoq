@@ -56,10 +56,10 @@ let client: Client;
 
 export function activate(context: ExtensionContext) {
   const coqTM = new VsCoqToolchainManager();
-  coqTM.intialize().then(
+  coqTM.initialize().then(
     () => {
       const serverOptions = coqTM.getServerConfiguration();
-      intializeExtension(serverOptions);
+      initializeExtension(serverOptions);
     },
     (err: ToolchainError) => {
       switch (err.status) {
@@ -157,7 +157,7 @@ export function activate(context: ExtensionContext) {
     );
   }
 
-  function intializeExtension(serverOptions: ServerOptions) {
+  function initializeExtension(serverOptions: ServerOptions) {
     const config = workspace.getConfiguration("vscoq");
 
     let clientOptions: LanguageClientOptions = {
@@ -199,14 +199,14 @@ export function activate(context: ExtensionContext) {
         return;
       } //don't allow for multiline selections
       //either use the user selection or if no selection than infer the word under the cursor
-      const wordAtCurorRange =
+      const wordAtCursorRange =
         end.character !== start.character
           ? selection
           : editor.document.getWordRangeAtPosition(end);
-      if (!wordAtCurorRange) {
+      if (!wordAtCursorRange) {
         return;
       } //there is no word: do nothing
-      const queryText = editor.document.getText(wordAtCurorRange);
+      const queryText = editor.document.getText(wordAtCursorRange);
       //focus on the query panel
       commands.executeCommand("vscoq.search.focus");
       //launch the query
@@ -305,7 +305,7 @@ export function activate(context: ExtensionContext) {
         notification.processedRange,
       );
 
-      client.updateHightlights();
+      client.updateHighlights();
     });
 
     client.onNotification(
@@ -373,7 +373,7 @@ export function activate(context: ExtensionContext) {
       statusBar.tooltip = new MarkdownString(
         `**Coq Installation**
 
-${coqTM.getversionFullOutput()}
+${coqTM.getVersionFullOutput()}
 
 Path: \`${coqTM.getCoqPath()}\`
 ---
@@ -387,14 +387,14 @@ Path: \`${coqTM.getVsCoqTopPath()}\`
 
       initializeDecorations(context);
 
-      // I think vscode should handle this automatically, TODO: try again after implemeting client capabilities
+      // I think vscode should handle this automatically, TODO: try again after implementing client capabilities
       context.subscriptions.push(
         workspace.onDidChangeConfiguration((event) => {
           updateServerOnConfigurationChange(event, context, client);
 
           if (event.affectsConfiguration("vscoq.proof.mode")) {
             client.resetHighlights();
-            client.updateHightlights();
+            client.updateHighlights();
           }
 
           if (event.affectsConfiguration("vscoq.goals.display")) {
@@ -419,7 +419,7 @@ Path: \`${coqTM.getVsCoqTopPath()}\`
       );
 
       window.onDidChangeActiveTextEditor((editor) => {
-        client.updateHightlights();
+        client.updateHighlights();
       });
     });
 

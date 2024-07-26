@@ -24,7 +24,7 @@ export default class VsCoqToolchainManager implements Disposable {
 
   public dispose(): void {}
 
-  public intialize(): Promise<void> {
+  public initialize(): Promise<void> {
     Client.writeToVscoq2Channel("[Toolchain] Searching for vscoqtop");
     return new Promise((resolve, reject: (reason: ToolchainError) => void) => {
       this.vscoqtopPath().then((vscoqtopPath) => {
@@ -78,7 +78,7 @@ export default class VsCoqToolchainManager implements Disposable {
     return this._coqVersion;
   }
 
-  public getversionFullOutput(): string {
+  public getVersionFullOutput(): string {
     return this._versionFullOutput;
   }
 

@@ -139,7 +139,7 @@ export default class SearchViewProvider implements vscode.WebviewViewProvider {
 
   /**
    * Sets up an event listener to listen for messages passed from the webview context and
-   * executes code based on the message that is recieved.
+   * executes code based on the message that is received.
    *
    * @param webview A reference to the extension webview
    * @param context A reference to the extension context

@@ -56,7 +56,7 @@ export default class Client extends LanguageClient {
     this._decorationsProcessed.set(uri, processedRange);
   }
 
-  public updateHightlights() {
+  public updateHighlights() {
     for (let entry of this._decorationsPrepared.entries()) {
       this.updateDocumentEditors(entry[0], entry[1], "prepared");
     }

@@ -108,7 +108,7 @@ const ppDisplay : FunctionComponent<PpProps> = (props) => {
         const id = uuid();
         switch(pp[0]) {
             case 'Ppcmd_empty':
-                console.error('Recieved PpTag with empty');
+                console.error('Received PpTag with empty');
                 return null;
             case 'Ppcmd_string':
                 return {
@@ -126,10 +126,10 @@ const ppDisplay : FunctionComponent<PpProps> = (props) => {
                     boxChildren: flattenGlue(pp[1], mode, indent, id, depth + 1)
                 } as Box;
             case 'Ppcmd_force_newline':
-                console.error('Recieved PpTag with fnl');
+                console.error('Received PpTag with fnl');
                 return null;
             case 'Ppcmd_comment':
-                console.error('Recieved PpTag with comment');
+                console.error('Received PpTag with comment');
                 return null;
             case 'Ppcmd_box':
                 const m = pp[1][0];
@@ -143,10 +143,10 @@ const ppDisplay : FunctionComponent<PpProps> = (props) => {
                     boxChildren: getBoxChildren(pp[2], m, i, id, depth + 1)
                 } as Box;
             case 'Ppcmd_tag':
-                console.error('Recieved PpTag with tag');
+                console.error('Received PpTag with tag');
                 return null;
             case 'Ppcmd_print_break':
-                console.error('Recieved PpTag with br');
+                console.error('Received PpTag with br');
                 return null;
         }
     };
