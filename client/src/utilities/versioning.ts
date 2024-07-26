@@ -10,7 +10,7 @@ export const checkVersion = (client: Client, context: ExtensionContext) => {
     if (serverInfo !== undefined) {
       const { name, version } = serverInfo;
       Client.writeToVscoq2Channel(
-        "[Versioning] Intialized server " + name + " [" + version + "]",
+        "[Versioning] Initialized server " + name + " [" + version + "]",
       );
       if (!checkCompat(extensionVersion, version)) {
         window.showErrorMessage(
@@ -30,7 +30,7 @@ export const checkVersion = (client: Client, context: ExtensionContext) => {
     }
   } else {
     Client.writeToVscoq2Channel(
-      "Could not run compatibility tests: failed to recieve initializeResult",
+      "Could not run compatibility tests: failed to receive initializeResult",
     );
   }
 };
