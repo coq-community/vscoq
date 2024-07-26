@@ -12,5 +12,7 @@
     "typescript.tsc.autoDetect": "off",
     "ocaml.sandbox": {
         "kind": "global"
-    }
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
 }

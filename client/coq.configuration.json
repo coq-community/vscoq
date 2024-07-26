@@ -1,51 +1,18 @@
 {
   "comments": {
-    "blockComment": [
-      "(*",
-      "*)"
-    ]
+    "blockComment": ["(*", "*)"]
   },
   "brackets": [
-    [
-      "{",
-      "}"
-    ],
-    [
-      "[",
-      "]"
-    ],
-    [
-      "{|",
-      "|}"
-    ],
-    [
-      "(",
-      ")"
-    ],
-    [
-      "Proof.",
-      "Qed."
-    ],
-    [
-      "Proof.",
-      "Admitted."
-    ],
-    [
-      "Proof.",
-      "Abort."
-    ],
-    [
-      "match",
-      "end"
-    ],
-    [
-      "repeat match",
-      "end"
-    ],
-    [
-      "repeat lazymatch",
-      "end"
-    ]
+    ["{", "}"],
+    ["[", "]"],
+    ["{|", "|}"],
+    ["(", ")"],
+    ["Proof.", "Qed."],
+    ["Proof.", "Admitted."],
+    ["Proof.", "Abort."],
+    ["match", "end"],
+    ["repeat match", "end"],
+    ["repeat lazymatch", "end"]
   ],
   "colorizedBracketPairs": [
     ["{", "}"],

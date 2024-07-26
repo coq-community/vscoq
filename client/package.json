@@ -109,12 +109,12 @@
         "title": "Memory management",
         "type": "object",
         "properties": {
-            "vscoq.memory.limit": {
-                "scope": "workspace",
-                "type": "number",
-                "default": 4,
-                "description": "Sets the memory limit over which we discard the execution state of documents which have been saved (in Gb). "
-            }
+          "vscoq.memory.limit": {
+            "scope": "workspace",
+            "type": "number",
+            "default": 4,
+            "description": "Sets the memory limit over which we discard the execution state of documents which have been saved (in Gb). "
+          }
         }
       },
       {
@@ -749,6 +749,7 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
     "lint": "eslint src --ext ts",
+    "format": "yarn prettier . --write",
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
@@ -762,9 +763,12 @@
     "@vscode/test-electron": "^2.2.0",
     "@vscode/vsce": "^2.19.0",
     "eslint": "^8.28.0",
+    "eslint-config-prettier": "^9.1.0",
     "expect": "^29.4.3",
     "glob": "^8.0.3",
     "mocha": "^10.1.0",
+    "prettier": "3.3.3",
+    "prettier-plugin-organize-imports": "^4.0.0",
     "tmp-promise": "^3.0.3",
     "ts-loader": "^9.4.1",
     "typescript": "^4.9.3",

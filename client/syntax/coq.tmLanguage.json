@@ -1,7 +1,5 @@
 {
-  "fileTypes": [
-    "v"
-  ],
+  "fileTypes": ["v"],
   "name": "Coq",
   "patterns": [
     {
