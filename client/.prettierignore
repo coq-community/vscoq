@@ -13,3 +13,6 @@ dist/
 ## Ignoring these since they have their own settings
 goal-view-ui
 search-ui
+
+# Markdown
+*.md

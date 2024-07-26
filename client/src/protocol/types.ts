@@ -1,15 +1,19 @@
-import { integer, TextDocumentIdentifier, VersionedTextDocumentIdentifier } from "vscode-languageclient";
 import { Position, Range, Uri } from "vscode";
+import {
+  integer,
+  TextDocumentIdentifier,
+  VersionedTextDocumentIdentifier,
+} from "vscode-languageclient";
 
 type Nullable<T> = T | null;
 
 export type PpTag = string;
 
 export enum PpMode {
-    horizontal = "Pp_hbox",
-    vertical = "Pp_vbox",
-    hvBox = "Pp_hvbox",
-    hovBox = "Pp_hovbox"
+  horizontal = "Pp_hbox",
+  vertical = "Pp_vbox",
+  hvBox = "Pp_hvbox",
+  hovBox = "Pp_hovbox",
 }
 
 export type BlockType =
@@ -29,117 +33,117 @@ export type PpString =
   | ["Ppcmd_comment", string[]];
 
 interface Error {
-    code: integer; 
-    message: string; 
+  code: integer;
+  message: string;
 }
 
 export interface Goal {
-    id: integer;
-    goal: PpString;
-    hypotheses: PpString[];
+  id: integer;
+  goal: PpString;
+  hypotheses: PpString[];
 }
 
 export interface ProofViewGoals {
-    goals: Goal[];
-    shelvedGoals: Goal[];
-    givenUpGoals: Goal[];
+  goals: Goal[];
+  shelvedGoals: Goal[];
+  givenUpGoals: Goal[];
 }
 
 export enum MessageSeverity {
-    error = "Error",
-    warning = "Warning", 
-    info = "Information"
+  error = "Error",
+  warning = "Warning",
+  info = "Information",
 }
 
 export type CoqMessage = [MessageSeverity, PpString];
 
 export interface ProofViewNotification {
-    proof: Nullable<ProofViewGoals>;
-    messages: CoqMessage[];
+  proof: Nullable<ProofViewGoals>;
+  messages: CoqMessage[];
 }
 
 export interface CoqLogMessage {
-    message: string;
+  message: string;
 }
 
 export interface UpdateHighlightsNotification {
-    uri: Uri;
-    preparedRange: Range[];
-    processingRange: Range[];
-    processedRange: Range[];
+  uri: Uri;
+  preparedRange: Range[];
+  processingRange: Range[];
+  processedRange: Range[];
 }
 
 export interface MoveCursorNotification {
-    uri: Uri; 
-    range: Range; 
+  uri: Uri;
+  range: Range;
 }
 
 export interface SearchCoqRequest {
-    id: string;
-    textDocument: VersionedTextDocumentIdentifier;
-    pattern: string; 
-    position: Position;
+  id: string;
+  textDocument: VersionedTextDocumentIdentifier;
+  pattern: string;
+  position: Position;
 }
 
 export interface SearchCoqHandshake {
-    id: string;
+  id: string;
 }
 
 export interface QueryError {
-    code: integer; 
-    message: string; 
+  code: integer;
+  message: string;
 }
 
 export interface SearchCoqResult {
-    id: string;
-    name: PpString; 
-    statement: PpString;
+  id: string;
+  name: PpString;
+  statement: PpString;
 }
 
 export interface AboutCoqRequest {
-    textDocument: VersionedTextDocumentIdentifier;
-    pattern: string; 
-    position: Position;
-    goalIndex?: number;
+  textDocument: VersionedTextDocumentIdentifier;
+  pattern: string;
+  position: Position;
+  goalIndex?: number;
 }
 
 export type AboutCoqResponse = PpString;
 
 export interface CheckCoqRequest {
-    textDocument: VersionedTextDocumentIdentifier;
-    pattern: string; 
-    position: Position;
-    goalIndex?: number;
-};
+  textDocument: VersionedTextDocumentIdentifier;
+  pattern: string;
+  position: Position;
+  goalIndex?: number;
+}
 
-export type CheckCoqResponse = PpString; 
+export type CheckCoqResponse = PpString;
 
 export interface LocateCoqRequest {
-    textDocument: VersionedTextDocumentIdentifier;
-    pattern: string; 
-    position: Position;
-};
+  textDocument: VersionedTextDocumentIdentifier;
+  pattern: string;
+  position: Position;
+}
 
-export type LocateCoqResponse = PpString; 
+export type LocateCoqResponse = PpString;
 
 export interface PrintCoqRequest {
-    textDocument: VersionedTextDocumentIdentifier;
-    pattern: string; 
-    position: Position;
-};
+  textDocument: VersionedTextDocumentIdentifier;
+  pattern: string;
+  position: Position;
+}
 
-export type PrintCoqResponse = PpString; 
+export type PrintCoqResponse = PpString;
 
 export interface DocumentStateRequest {
-    textDocument: TextDocumentIdentifier;
+  textDocument: TextDocumentIdentifier;
 }
 
 export interface DocumentStateResponse {
-    document: string;
+  document: string;
 }
 
 export interface ResetCoqRequest {
-    textDocument: TextDocumentIdentifier;
+  textDocument: TextDocumentIdentifier;
 }
 
-export interface ResetCoqResponse {};
+export interface ResetCoqResponse {}

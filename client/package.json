@@ -749,6 +749,7 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
     "lint": "eslint src --ext ts",
+    "format": "yarn prettier . --write",
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
