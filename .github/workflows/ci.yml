@@ -105,7 +105,6 @@ jobs:
       run: cat /tmp/vscoq_init_log.*
 
   install-windows:
-    if: false
     runs-on: windows-latest
     steps:
     - name: Set git to use LF
@@ -119,7 +118,7 @@ jobs:
     - name: Build language server
       run: .\language-server\build-windows-platform.bat
       env:
-        COQ_VERSION: V8.18+rc1
+        COQ_VERSION: V8.19.0
 
     - run: C:\ci\cygwin64\bin\bash.exe --login -c 'echo vscoqtop=$(cygpath -m $(which vscoqtop))' >> $Env:GITHUB_ENV
 
