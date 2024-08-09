@@ -1,10 +1,8 @@
 import React, {FunctionComponent, useState} from 'react';
 
-import { stringOfPpString } from '../../utilities/pp';
-
 import { VSCodeButton } from '@vscode/webview-ui-toolkit/react';
 import {VscCopy, VscChevronDown, VscChevronRight, VscTrash, VscClose} from 'react-icons/vsc';
-
+import { stringOfPpString } from 'pp-display';
 import { CollapsibleSearchResult } from '../../types';
 import ResultName from '../atoms/ResultName';
 import ResultStatement from '../atoms/ResultStatement';

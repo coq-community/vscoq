@@ -1,7 +1,6 @@
 import React, {FunctionComponent} from 'react';
 
-import { fragmentOfPpString } from '../../utilities/pp';
-import { PpString } from '../../types';
+import { PpString, PpDisplay } from 'pp-display';
 
 import classes from './ResultName.module.css';
 
@@ -13,7 +12,7 @@ const resultName: FunctionComponent<ResultNameProps> = (props) => {
     
     const {name} = props;
     
-    return <>{fragmentOfPpString(name, classes)}</>;
+    return <PpDisplay pp={name} coqCss={classes} maxDepth={17}/>;
     
 };
 

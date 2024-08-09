@@ -1,7 +1,6 @@
 import React, {FunctionComponent} from 'react';
 
-import { fragmentOfPpString } from '../../utilities/pp';
-import { PpString } from '../../types';
+import { PpString, PpDisplay } from 'pp-display';
 
 import classes from './ResultStatement.module.css';
 
@@ -17,7 +16,9 @@ const resultStatement: FunctionComponent<ResultStatementProps> = (props) => {
     const classNames = className ? className.concat([classes.ResultStatement]) : [classes.ResultStatement];
     
     return statement ?
-        <span className={classNames.join(' ')}> {fragmentOfPpString(statement, classes)} </span>
+        <span className={classNames.join(' ')}>
+            <PpDisplay pp={statement} coqCss={classes} maxDepth={17}/>
+        </span>
         : null;
     
 };
