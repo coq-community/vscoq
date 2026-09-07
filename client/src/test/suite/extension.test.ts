@@ -7,12 +7,14 @@ import * as common from "./common";
 suite("Should get diagnostics", function () {
     this.timeout(30000);
 
+    teardown(common.resetTestState);
+
     test("Diagnoses an undefined ref error", async () => {
         const ext = vscode.extensions.getExtension("rocq-prover.vsrocq")!;
         await ext.activate();
-        vscode.workspace.getConfiguration().update("vsrocq.proof.mode", 1);
+        await common.configure("vsrocq.proof.mode", 1);
 
-        const doc = await common.openTextFile("basic.v");
+        const doc = await common.openFixture("basic.v");
 
         const diagnostics = await common.waitForDiagnostics(
             doc,
@@ -31,10 +33,10 @@ suite("Should get diagnostics", function () {
     test("Opens two files and gets feedback", async () => {
         const ext = vscode.extensions.getExtension("rocq-prover.vsrocq")!;
         await ext.activate();
-        vscode.workspace.getConfiguration().update("vsrocq.proof.mode", 1);
+        await common.configure("vsrocq.proof.mode", 1);
 
-        const doc1 = await common.openTextFile("basic.v");
-        const doc2 = await common.openTextFile("warn.v");
+        const doc1 = await common.openFixture("basic.v");
+        const doc2 = await common.openFixture("warn.v");
 
         const [diagnostics1, diagnostics2] = await Promise.all([
             common.waitForDiagnostics(doc1, common.anyDiagnostic),
