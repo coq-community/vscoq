@@ -36,7 +36,7 @@ jobs:
         run: npm run package
       - name: Publish to Open VSX Registry
         if: ${{inputs.marketplace == 'openvsx' || inputs.marketplace == 'both'}}
-        uses: HaaLeo/publish-vscode-extension@v1.6.2
+        uses: HaaLeo/publish-vscode-extension@28e2d3f5817fccf23c1f219eb0cecc903132d1a2  # v1.6.2
         id: publishToOpenVSX
         with:
           pat: ${{ secrets.OVSX_PAT }}
@@ -44,7 +44,7 @@ jobs:
           preRelease: ${{ inputs.preRelease }}
       - name: Publish to Visual Studio Marketplace
         if: ${{inputs.marketplace == 'vscode' || inputs.marketplace == 'both'}}
-        uses: HaaLeo/publish-vscode-extension@v1.6.2
+        uses: HaaLeo/publish-vscode-extension@28e2d3f5817fccf23c1f219eb0cecc903132d1a2  # v1.6.2
         with:
           pat: ${{ secrets.VSCE_PAT }}
           packagePath: ./client/
