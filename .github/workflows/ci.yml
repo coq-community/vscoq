@@ -4,6 +4,11 @@ on:
     tags:
       - "v*.*.*"
   pull_request:
+    # `labeled` is here so that adding the `ci-full` label starts a run. Without
+    # it the label fires nothing, and "Re-run all jobs" replays the payload the
+    # run started with, which predates the label. Declaring `types` overrides
+    # the defaults, so the other three have to be listed explicitly.
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
 
 # One run per ref: a second push to a PR cancels the first instead of stacking
@@ -14,6 +19,25 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  matrix-plan:
+    # Decides which cells this run schedules. GitHub caps concurrent macOS
+    # runners at 5 while the full matrix asks for 16 of them, so a pull request
+    # gets a reduced set of macOS cells and everything else gets all of them.
+    # Label a pull request `ci-full` to get the complete matrix on demand.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      nix: ${{ steps.cells.outputs.nix }}
+      opam: ${{ steps.cells.outputs.opam }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+    - name: Plan the matrix
+      id: cells
+      env:
+        FULL: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci-full') }}
+      run: python3 .github/scripts/ci-matrix.py
+
   build-extension:
     strategy:
       matrix:
@@ -35,16 +59,10 @@ jobs:
     - run: npm run package
 
   nix-dev-build:
+    needs: matrix-plan
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        coq: [8-18, 8-19, 8-20, 9, 9-1, 9-2, 9-3, master]
-        profile: [dev]
-        include:
-          - profile: fatalwarnings
-            coq: master
-            os: ubuntu-latest
+      matrix: ${{ fromJSON(needs.matrix-plan.outputs.nix) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
@@ -83,12 +101,10 @@ jobs:
       run: cat /tmp/vsrocq_init_log.* 2>/dev/null || echo "no init log was written"
 
   install-opam:
+    needs: matrix-plan
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        ocaml-compiler: [4.14.2]
-        coq: [8.18.0, 8.19.0, 8.20.0, 9.0.0, 9.1.1, 9.2.0, 9.3.dev, dev]
+      matrix: ${{ fromJSON(needs.matrix-plan.outputs.opam) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     # Rocq 8.19 on macOS is known-flaky; don't let it fail the whole run.
