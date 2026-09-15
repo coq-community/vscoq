@@ -114,7 +114,7 @@ type parsing_end_info = {
     parsed_document: document;
 }
 
-type event = 
+type event =
 | Parse of (bool * parse_state) interruptible_result Sel.Promise.state
 let pp_event fmt = function
  | Parse _ -> Format.fprintf fmt "Parse _"
@@ -154,6 +154,12 @@ let range_of_id_with_blank_space document id =
   | None -> CErrors.anomaly Pp.(str"Trying to get range of non-existing sentence " ++ Stateid.print id)
   | Some sentence -> range_of_sentence_with_blank_space document.raw_doc sentence
 
+let range_of_document document : Range.t =
+  let raw = document.raw_doc in
+  let start : Position.t = { line = 0; character = 0 } in
+  let end_ = RawDocument.position_of_loc raw (RawDocument.end_loc raw) in
+  Range.create ~end_ ~start
+
 let schedule doc = doc.schedule
 
 let raw_document doc = doc.raw_doc
@@ -162,7 +168,7 @@ let parse_errors parsed =
   List.map snd (LM.bindings parsed.parsing_errors_by_end)
 
 let add_sentence parsed id parsing_start start stop (ast: sentence_state) synterp_state scheduler_state_before =
-  let scheduler_state_after, schedule = 
+  let scheduler_state_after, schedule =
     match ast with
     | Error {msg} ->
       scheduler_state_before, Scheduler.schedule_errored_sentence id msg synterp_state parsed.schedule
@@ -173,7 +179,7 @@ let add_sentence parsed id parsing_start start stop (ast: sentence_state) synter
   (* FIXME may invalidate scheduler_state_XXX for following sentences -> propagate? *)
   (* What about messages generated during parsing? *)
   let sentence = { parsing_start; start; stop; ast; id; synterp_state; scheduler_state_before; scheduler_state_after; messages = []; checked = None } in
-  let document = { 
+  let document = {
     parsed with sentences_by_end = LM.add stop id parsed.sentences_by_end;
     sentences_by_id = SM.add id sentence parsed.sentences_by_id;
     schedule;
@@ -191,12 +197,12 @@ let remove_sentence parsed id =
 
 let sentences parsed =
   List.map snd @@ SM.bindings parsed.sentences_by_id
-  
+
 type code_line =
   | Sentence of sentence
   | ParsingError of parsing_error
   | Comment of comment
-  
+
 let start_of_code_line = function
   | Sentence { start = x } -> x
   | ParsingError  { start = x } -> x
@@ -267,7 +273,7 @@ let find_sentence_strictly_before parsed loc =
   | Some (_, sentence) -> Some sentence
   | _ -> None
 
-let find_sentence_after parsed loc = 
+let find_sentence_after parsed loc =
   match LM.find_first_opt (fun k -> loc <= k) parsed.sentences_by_end with
   | Some (_, sentence_id) -> Some (sentence_of_id parsed sentence_id)
   | _ -> None
@@ -278,7 +284,7 @@ let find_sentence_after_pos document pos =
   (* if the current loc falls squarely within a sentence *)
   match find_sentence document loc with
   | Some x -> Some x
-  | None -> 
+  | None ->
     (** otherwise the sentence start is after the loc,
         so we must be in the whitespace before the sentence
         and need to interpret to the sentence before instead
@@ -286,6 +292,11 @@ let find_sentence_after_pos document pos =
     match find_sentence_before document loc with
     | None -> None
     | Some x -> Some x
+
+let find_sentence_at_pos document pos : sentence option =
+  let raw = raw_document document in
+  let loc = RawDocument.loc_of_position raw pos in
+  find_sentence_after document loc
 
 let find_next_qed parsed loc =
   let exception Found of sentence in
@@ -307,11 +318,11 @@ let find_next_qed_pos parsed pos =
   let loc = RawDocument.loc_of_position (raw_document parsed) pos in
   find_next_qed parsed loc
 
-let get_first_sentence parsed = 
+let get_first_sentence parsed =
   Option.map (fun (_,id) -> sentence_of_id parsed id) @@
     LM.find_first_opt (fun _ -> true) parsed.sentences_by_end
 
-let get_last_sentence parsed = 
+let get_last_sentence parsed =
   Option.map (fun (_,id) -> sentence_of_id parsed id) @@
     LM.find_last_opt (fun _ -> true) parsed.sentences_by_end
 
@@ -346,7 +357,7 @@ let is_sentence_above st id1 id2 =
 let all_feedback parsed =
   SM.bindings parsed.sentences_by_id |>
   List.fold_left (fun acc (id, { messages }) -> List.map (fun x -> (id, x)) messages @ acc) []
- 
+
 let feedback parsed id =
   match SM.find_opt id parsed.sentences_by_id with
   | None -> []
@@ -395,7 +406,7 @@ let is_checked parsed id =
 
 let append_feedback parsed id (_, _, _, msg as fb) =
   match SM.find_opt id parsed.sentences_by_id with
-  | None -> 
+  | None ->
     log (fun () -> "Received feedback on non-existing state id " ^ Stateid.to_string id ^ ": " ^ Pp.string_of_ppcmds msg);
     parsed
   | Some s ->
@@ -433,7 +444,7 @@ let patch_sentence parsed scheduler_state_before id ({ parsing_start; ast; start
   let sentences_by_id = SM.add id new_sentence parsed.sentences_by_id in
   let sentences_by_end = match LM.find_opt old_sentence.stop parsed.sentences_by_end with
   | Some id when Stateid.equal id new_sentence.id ->
-    LM.remove old_sentence.stop parsed.sentences_by_end 
+    LM.remove old_sentence.stop parsed.sentences_by_end
   | _ -> parsed.sentences_by_end
   in
   let sentences_by_end = LM.add new_sentence.stop id sentences_by_end in
@@ -468,7 +479,7 @@ let same_tokens (s1 : sentence) (s2 : pre_sentence) =
     let tok_pair_equal (_, t1) (_, t2) = tok_equal t1 t2 in
     CList.equal tok_pair_equal ast1.tokens ast2.tokens
   | _, _ -> false
-  
+
 (* TODO improve diff strategy (insertions,etc) *)
 let rec diff old_sentences new_sentences =
   match old_sentences, new_sentences with
@@ -477,9 +488,9 @@ let rec diff old_sentences new_sentences =
   | old_sentences, [] -> [Deleted (List.map (fun s -> s.id) old_sentences)]
     (* FIXME something special should be done when `Deleted` is applied to a parsing effect *)
   | old_sentence::old_sentences, new_sentence::new_sentences ->
-    if same_tokens old_sentence new_sentence then 
+    if same_tokens old_sentence new_sentence then
       Equal [(old_sentence.id,new_sentence)] :: diff old_sentences new_sentences
-    else 
+    else
       Deleted [old_sentence.id] :: Added [new_sentence] :: diff old_sentences new_sentences
 
 let string_of_diff_item doc = function
@@ -723,13 +734,13 @@ let invalidate top_edit top_id parsed_doc new_sentences =
     | Equal _ :: diffs
     | Added _ :: diffs -> remove_old parsed_doc invalid_ids diffs in
   let (_,_synterp_state,scheduler_state) = state_at_pos parsed_doc top_edit in
-  log (fun () -> 
+  log (fun () ->
     let sentence_strings = LM.bindings @@ LM.map (fun s -> string_of_parsed_ast (sentence_of_id parsed_doc s).ast) parsed_doc.sentences_by_end in
     let sentence_strings = List.map (fun s -> snd s) sentence_strings in
     let sentence_string = String.concat " " sentence_strings in
     let sentence_strings_id = SM.bindings @@ SM.map (fun s -> string_of_parsed_ast s.ast) parsed_doc.sentences_by_id in
     let sentence_strings_id = List.map (fun s -> snd s) sentence_strings_id in
-    let sentence_string_id = String.concat " " sentence_strings_id in    
+    let sentence_string_id = String.concat " " sentence_strings_id in
     Format.sprintf "Top edit: %i, Doc: %s, Doc by id: %s" top_edit sentence_string sentence_string_id);
   let old_sentences = List.map (sentence_of_id parsed_doc) @@ sentences_after parsed_doc top_edit in
   let diff = diff old_sentences new_sentences in
@@ -784,17 +795,17 @@ let handle_event document = function
 | Parse (Sel.Promise.Rejected e) -> raise e
 | Parse (Sel.Promise.Fulfilled Interrupted) -> assert false
 | Parse (Sel.Promise.Fulfilled (Aborted e)) -> CErrors.user_err e
-| Parse (Sel.Promise.Fulfilled (Terminated (true,parse_state))) -> 
+| Parse (Sel.Promise.Fulfilled (Terminated (true,parse_state))) ->
   (* let event = create_parse_event parse_state in *)
   let event = create_parse_event ~doc_id:document.doc_id parse_state in
   let cancel_handle = Some (Sel.Event.get_cancellation_handle event) in
   {document with cancel_handle}, [event], None
-| Parse (Sel.Promise.Fulfilled (Terminated (false,parse_state))) -> 
+| Parse (Sel.Promise.Fulfilled (Terminated (false,parse_state))) ->
   {document with cancel_handle=None}, [], handle_invalidate parse_state document
 
 let create_document ~doc_id init_synterp_state text =
   let raw_doc = RawDocument.create text in
-    { 
+    {
       parsed_loc = -1;
       raw_doc;
       sentences_by_id = SM.empty;
@@ -835,5 +846,5 @@ module Internal = struct
     | Sentence sentence -> string_of_sentence sentence
     | Comment _ -> "(* comment *)"
     | ParsingError error -> string_of_error error
-  
+
 end

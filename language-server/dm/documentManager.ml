@@ -214,6 +214,16 @@ let get_folding_ranges st =
   log (fun () -> "Folding ranges: " ^ (string_of_int @@ List.length folding_ranges));
   folding_ranges
 
+let get_selection_range (st : state) (pos : Position.t) : SelectionRange.t =
+  let document = st.document in
+  let sentence = Document.find_sentence_at_pos document pos in
+  let document_range = SelectionRange.create ~range:(Document.range_of_document document) () in
+  match sentence with
+  | None -> document_range
+  | Some { id } ->
+    let range = Document.range_of_id document id in
+    SelectionRange.create ~range ~parent:document_range ()
+
 let get_next_range st pos =
   match Document.find_sentence_before_pos st.document pos with
   | None -> None

@@ -128,6 +128,9 @@ val token_at_loc : sentence -> int -> Tok.t option
 val find_sentence : document -> int -> sentence option
 (** [find_sentence doc loc] finds the sentence containing the loc *)
 
+val find_sentence_at_pos : document -> Position.t -> sentence option
+(** [find_sentence_at_pos doc pos] finds the sentence at the pos, with leading blank spaces *)
+
 val find_sentence_before : document -> int -> sentence option
 (** [find_sentence_before doc loc] finds the last sentence before the loc *)
 
@@ -165,6 +168,9 @@ val range_of_id : document -> sentence_id -> Range.t
 
 val range_of_id_with_blank_space : document -> sentence_id -> Range.t
 (** [range_of_id_with_blank_space doc id] returns a Range object coressponding to the sentence id given in argument but with the white spaces before (until the previous sentence) *)
+
+val range_of_document : document -> Range.t
+(** [range_of_document doc] returns a Range object corresponding to the whole document *)
 
 val all_feedback : document -> (sentence_id * feedback_message) list
 (** [all_feedback doc] returns all sentences with a feedback *)

@@ -160,6 +160,7 @@ let do_initialize id params =
   let hoverProvider = `Bool true in
   let definitionProvider = `Bool true in
   let foldingRangeProvider = `Bool true in
+  let selectionRangeProvider = `Bool true in
   let capabilities = ServerCapabilities.create
     ~textDocumentSync
     ~completionProvider
@@ -168,6 +169,7 @@ let do_initialize id params =
     ~documentSymbolProvider
     ~documentHighlightProvider
     ~foldingRangeProvider
+    ~selectionRangeProvider
   ()
   in
   let initialize_result = Lsp.Types.InitializeResult.{
@@ -454,6 +456,14 @@ let documentFoldingRange id params =
       let folding_ranges = Dm.DocumentManager.get_folding_ranges st in
       Ok(Some folding_ranges)
 
+let documentSelectionRanges id params =
+  let Lsp.Types.SelectionRangeParams.{ textDocument = { uri }; positions } = params in
+  match Hashtbl.find_opt states (DocumentUri.to_path uri) with
+  | None -> log (fun () -> "[documentSelectionRanges] ignoring event on non existent document"); Ok []
+  | Some { st } ->
+    log (fun () -> "[documentSelectionRanges] getting selection ranges");
+    Ok (List.map (fun pos -> Dm.DocumentManager.get_selection_range st pos) positions)
+
 let documentSymbol id params =
   let Lsp.Types.DocumentSymbolParams.{ textDocument = {uri}; partialResultToken; workDoneToken } = params in (*TODO: At some point we might get support for partialResult and workDone*)
   match Hashtbl.find_opt states (DocumentUri.to_path uri) with
@@ -578,6 +588,8 @@ let dispatch_std_request : type a. Jsonrpc.Id.t -> a Lsp.Client_request.t -> (a,
     documentSymbol id params
   | TextDocumentFoldingRange params ->
     documentFoldingRange id params, []
+  | SelectionRange params ->
+    documentSelectionRanges id params, []
   | UnknownRequest _ | _  -> Error ({message="Received unknown request"; code=None}), []
 
 let dispatch_request : type a. Jsonrpc.Id.t -> a Request.Client.t -> (a,error) result * events =
